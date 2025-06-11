@@ -33,7 +33,6 @@ class ReferenceSeeder extends Seeder
             ['name' => 'weight gain'],
             ['name' => 'optimize health'],
             ['name' => 'muscle gain'],
-            ['name' => 'heart health'],
             ['name' => 'boost energy'],
         ]);
         ActivityLevel::insert([

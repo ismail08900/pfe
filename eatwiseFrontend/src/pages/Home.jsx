@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useUser } from "../contexts/useUser";
 import api from "../api";
 import LogoutButton from "../components/LogoutButton";
-import UserRecipes from "../components/UserRecipes";
+import UserRecipes from "../pages/UserRecipes";
 
 export default function Home() {
   const { user, token } = useUser();

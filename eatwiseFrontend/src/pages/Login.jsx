@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ArrowLeftCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../api"; // ton instance axios personnalisée
-import { useUser } from "../contexts/useUser"; // ton context user
+import api from "../api";
+import { useUser } from "../contexts/useUser";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
   const { setUser, setToken } = useUser();
 
@@ -18,21 +20,52 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     try {
       const res = await api.post("/login", {
         email: form.email,
         password: form.password,
       });
-      // Stocke token et user
+
+      // Si l'email n'est pas vérifié, on redirige vers /verify-email
+      if (res.data.email_verified === false) {
+        // Stocke le token temporaire pour la vérification d'email
+        if (res.data.token) {
+          localStorage.setItem("verifyToken", res.data.token);
+        }
+        navigate("/verify-email", { state: { email: form.email } });
+        return;
+      }
+
+      // Connexion normale
       setToken(res.data.token);
       setUser(res.data.user);
-      // Redirige
       navigate("/home");
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Erreur lors de la connexion. Vérifiez vos identifiants."
-      );
+      // Gestion du cas où le backend retourne un 403 (email non vérifié)
+      if (
+        err.response?.status === 403 &&
+        err.response?.data?.email_verified === false
+      ) {
+        if (err.response.data.token) {
+          localStorage.setItem("verifyToken", err.response.data.token);
+        }
+        navigate("/verify-email", { state: { email: form.email } });
+      } else {
+        setError(
+          err.response?.data?.message ||
+            "Erreur lors de la connexion. Vérifiez vos identifiants."
+        );
+        setIsVisible(true);
+        setTimeout(() => {
+          setIsVisible(false); // déclenche l'animation
+        }, 5000);
+        setTimeout(() => {
+          setError("");
+        }, 6000);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,7 +101,15 @@ const Login = () => {
         </p>
 
         {error && (
-          <div className="mb-4 text-red-600 text-center text-sm">{error}</div>
+          <div
+            className={`toast toast-start transition-opacity duration-1000 ${
+              isVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="alert alert-error ">
+              <span>{error}</span>
+            </div>
+          </div>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -133,8 +174,9 @@ const Login = () => {
           <button
             type="submit"
             className="btn bg-green-600 hover:bg-[#2E7D32] rounded-xl text-white w-full"
+            disabled={loading}
           >
-            Se connecter
+            {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
 

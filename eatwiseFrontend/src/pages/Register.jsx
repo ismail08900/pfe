@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
 import {
   User,
   Mail,
@@ -19,10 +17,10 @@ import {
   VenusAndMars,
   Flame,
   ArrowLeftCircle,
+  ChevronUp,
 } from "lucide-react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Checkbox from "../components/Ckeckbox";
-import { useUser } from "../contexts/useUser";
 import api from "../api";
 
 export default function Register() {
@@ -33,8 +31,9 @@ export default function Register() {
   const [passwordStrength, setPasswordStrength] = useState("");
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
   const navigate = useNavigate();
-  const { setUser, setToken } = useUser();
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [focusedSelect, setFocusedSelect] = useState(null);
   //backend api data
   const [diets, setDiets] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -120,48 +119,7 @@ export default function Register() {
               setPasswordConfirmError(
                 "Les mots de passe ne correspondent pas."
               );
-              return;
-            }
-            // Récupère les allergies cochées
-            const allergy_ids = allergyList
-              .filter((a) => formData[a.name])
-              .map((a) => a.id);
-
-            try {
-              const res = await api.post("/register", {
-                ...formData,
-                diet_type_id: formData.diet_type_id,
-                goal_id: formData.goal_id,
-                activity_level_id: formData.activity_level_id,
-                allergy_ids,
-              });
-              // (optionnel) Mets à jour le context si tu en utilises un
-              setToken(res.data.token);
-              setUser(res.data.user);
-
-              // Redirige
-              navigate("/home"); // ou utilise navigate si React Router v6+
-            } catch (err) {
-              // Ici, ne pas essayer de lire res.data, utilise err.response.data ou un message par défaut
-              setError(
-                err.response?.data?.message ||
-                  "Erreur lors de l'inscription. Veuillez vérifier vos informations."
-              );
-            }
-          }}
-        >
-          {/* Nom */}
-          <div className="mb-4">
-            <label className="label text-sm font-medium mb-1">Nom</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                <User size={18} />
-              </span>
-              {/*if (formData.password !== formData.password_confirmation) {
-              setPasswordConfirmError(
-                "Les mots de passe ne correspondent pas."
-              );
-              const confirmInput = form.querySelector(
+              const confirmInput = event.target.querySelector(
                 'input[name="password_confirmation"]'
               );
               if (confirmInput) {
@@ -176,7 +134,43 @@ export default function Register() {
               return;
             } else {
               setPasswordConfirmError("");
-            } */}
+            }
+            setLoading(true);
+            // Récupère les allergies cochées
+            const allergy_ids = allergyList
+              .filter((a) => formData[a.name])
+              .map((a) => a.id);
+
+            try {
+              const res = await api.post("/register", {
+                ...formData,
+                diet_type_id: formData.diet_type_id,
+                goal_id: formData.goal_id,
+                activity_level_id: formData.activity_level_id,
+                allergy_ids,
+              });
+              setError("");
+              localStorage.setItem("verifyToken", res.data.token);
+              navigate("/verify-email");
+            } catch (err) {
+              // Ici, ne pas essayer de lire res.data, utilise err.response.data ou un message par défaut
+              setError(
+                err.response?.data?.message ||
+                  "Erreur lors de l'inscription. Veuillez vérifier vos informations."
+              );
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          {/* Nom */}
+          <div className="mb-4">
+            <label className="label text-sm font-medium mb-1">Nom</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                <User size={18} />
+              </span>
+
               <input
                 name="last_name"
                 type="text"
@@ -330,10 +324,16 @@ export default function Register() {
                 <VenusAndMars size={18} />
               </span>
               <span className="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
-                <ChevronDown size={18} />
+                {focusedSelect === "gender" ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
               </span>
               <select
                 name="gender"
+                onFocus={() => setFocusedSelect("gender")}
+                onBlur={() => setFocusedSelect(null)}
                 onChange={handleChange}
                 className={`${selectClass}`}
                 required
@@ -398,10 +398,16 @@ export default function Register() {
                 <Dumbbell size={18} />
               </span>
               <span className="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
-                <ChevronDown size={18} />
+                {focusedSelect === "activity" ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
               </span>
               <select
                 name="activity_level_id"
+                onFocus={() => setFocusedSelect("activity")}
+                onBlur={() => setFocusedSelect(null)}
                 onChange={handleChange}
                 className={selectClass}
                 required
@@ -428,10 +434,16 @@ export default function Register() {
                 <Target size={18} />
               </span>
               <span className="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
-                <ChevronDown size={18} />
+                {focusedSelect === "goal" ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
               </span>
               <select
                 name="goal_id"
+                onFocus={() => setFocusedSelect("goal")}
+                onBlur={() => setFocusedSelect(null)}
                 onChange={handleChange}
                 className={selectClass}
                 required
@@ -479,10 +491,16 @@ export default function Register() {
                 <Salad size={18} />
               </span>
               <span className="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
-                <ChevronDown size={18} />
+                {focusedSelect === "diet" ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
               </span>
               <select
                 name="diet_type_id"
+                onFocus={() => setFocusedSelect("diet")}
+                onBlur={() => setFocusedSelect(null)}
                 onChange={handleChange}
                 className={selectClass}
                 required
@@ -496,7 +514,6 @@ export default function Register() {
                   <option value={diet.id} key={diet.id}>
                     {diet.name}
                   </option>
-
                 ))}
                 <option value="other">other</option>
               </select>
@@ -592,12 +609,20 @@ export default function Register() {
           </div>
           <button
             type="submit"
-            className="btn bg-green-600 hover:bg-[#2E7D32] rounded-xl text-white w-full mt-4"
+            className={`btn bg-green-600 hover:bg-[#2E7D32] rounded-xl text-white w-full mt-4 ${
+              loading ? "btn-disabled opacity-60 cursor-not-allowed" : ""
+            }`}
+            disabled={loading}
           >
-            Créer mon compte
+            {loading && (
+              <span className="loading loading-spinner loading-sm mr-2"></span>
+            )}
+            {loading ? "Création en cours..." : "Créer mon compte"}
           </button>
           {error && (
-            <div className="mb-4 text-red-600 text-center text-sm">{error}</div>
+            <div className="alert alert-error shadow-lg my-4">
+              <span>{error}</span>
+            </div>
           )}
         </form>
       </div>

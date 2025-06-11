@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered; // <-- à ajouter
 
 class RegisterController extends Controller
 {
@@ -56,12 +57,15 @@ class RegisterController extends Controller
             $user->allergies()->sync($validated["allergy_ids"]);
         }
 
-        // Création du token
-        $token = $user->createToken('main')->plainTextToken;
-        $user->load('allergies');
+        // Envoi de l'email de vérification
+        event(new Registered($user));
+        $token = $user->createToken('verify-email')->plainTextToken;
+
+        // NE PAS connecter l'utilisateur ici (pas de token), attendre qu'il ait validé son email
         return response()->json([
-            "user" => $user,
+            "message" => "Inscription réussie. Un email de vérification a été envoyé. Veuillez vérifier votre boîte de réception.",
             "token" => $token,
+            "user" => $user,
         ], 201);
     }
 }

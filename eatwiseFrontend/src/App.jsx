@@ -9,7 +9,10 @@ import Welcome from "./pages/Welcome";
 import Home from "./pages/Home";
 import PrivateRoute from "./components/PrivateRoute";
 import Profile from "./pages/Profile";
-import UserRecipes from "./components/UserRecipes";
+import UserRecipes from "./pages/UserRecipes";
+import VerifyEmail from "./pages/VerifyEmail";
+import EmailVerified from "./pages/EmailVerified";
+import RecipeDetails from "./pages/RecipeDetails";
 export default function App() {
   return (
     <div>
@@ -26,12 +29,29 @@ export default function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/user-recipes" element={<UserRecipes />} />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/user-recipes"
+            element={
+              <PrivateRoute>
+                <UserRecipes />
+              </PrivateRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/email-verified" element={<EmailVerified />} />
+        <Route path="/recette/:id" element={<RecipeDetails />} />
       </Routes>
     </div>
   );
