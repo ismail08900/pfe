@@ -27,7 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         "diet_type_id",
         "goal_id",
         "activity_level_id",
-        "calorie_target",
+        "weight_target",
         "custom_diet",
         "custom_allergy"
     ];

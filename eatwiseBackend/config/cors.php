@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // 'allowed_origins' => ['*'],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
@@ -31,7 +31,6 @@ return [
 
     'supports_credentials' => false,
 
-    'allowed_origins' => ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://192.168.136.1:5173'],
     'paths' => ['api/*', 'login', 'register', 'logout', 'email/verification-notification', 'email/is-verified'],
 
 

@@ -1,4 +1,4 @@
-import { CookingPot } from "lucide-react";
+import { CookingPot, Utensils } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row md:justify-between">
           <div className="mb-6 md:mb-0">
             <div className="flex items-center space-x-2">
-              <CookingPot className="text-gray-800" size={22}/>
+              <Utensils className="text-gray-800" size={22}/>
               <span className="font-bold text-xl text-gray-800 -mb-1">EatWise</span>
             </div>
             <p className="text-gray-600 mt-2 max-w-md">

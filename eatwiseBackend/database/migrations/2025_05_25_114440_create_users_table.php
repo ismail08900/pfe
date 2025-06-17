@@ -30,7 +30,7 @@ return new class extends Migration
             $table->unsignedBigInteger('diet_type_id')->nullable();
             $table->unsignedBigInteger('goal_id')->nullable();
             $table->unsignedBigInteger('activity_level_id')->nullable();
-            $table->unsignedInteger('calorie_target')->nullable();
+            $table->unsignedInteger('weight_target')->nullable();
             $table->string('custom_diet')->nullable();
             $table->string('custom_allergy')->nullable();
 

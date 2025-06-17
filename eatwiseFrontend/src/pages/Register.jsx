@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { allergyLabels, dietLabels, goalLabels,activityLevelLabels } from "../utils/labels";
 import {
   User,
   Mail,
@@ -344,7 +345,6 @@ export default function Register() {
                 </option>
                 <option value="male">Homme</option>
                 <option value="female">Femme</option>
-                <option value="na">Préfère ne pas dire</option>
               </select>
             </div>
           </div>
@@ -418,7 +418,7 @@ export default function Register() {
                 </option>
                 {activities.map((activity) => (
                   <option value={activity.id} key={activity.id}>
-                    {activity.name}
+                    {activityLevelLabels[activity.name]}
                   </option>
                 ))}
               </select>
@@ -454,7 +454,7 @@ export default function Register() {
                 </option>
                 {goals.map((goal) => (
                   <option value={goal.id} key={goal.id}>
-                    {goal.name}
+                    {goalLabels[goal.name]}
                   </option>
                 ))}
               </select>
@@ -463,7 +463,7 @@ export default function Register() {
           {/* Objectif calorique */}
           <div className="mb-4">
             <label className="label text-sm font-medium mb-1">
-              Objectif calorique (optionnel)
+              Objectif de poids (optionnel)
             </label>
             <div className="relative">
               {" "}
@@ -471,11 +471,11 @@ export default function Register() {
                 <Flame size={18} />
               </span>
               <input
-                name="calorie_target"
+                name="weight_target"
                 type="number"
-                placeholder="Exemple : 2200"
-                min={1000}
-                max={6000}
+                placeholder="Votre objectif poids en kg"
+                min={30}
+                max={300}
                 onChange={handleChange}
                 className={inputClass}
               />
@@ -509,13 +509,13 @@ export default function Register() {
                 <option value="" disabled>
                   Sélectionnez un régime
                 </option>
-                <option value="none">none</option>
+                <option value="none">aucun</option>
                 {diets.map((diet) => (
                   <option value={diet.id} key={diet.id}>
-                    {diet.name}
+                    {dietLabels[diet.name]}
                   </option>
                 ))}
-                <option value="other">other</option>
+                <option value="other">autre</option>
               </select>
             </div>
             {/* Input custom diet */}
@@ -552,7 +552,7 @@ export default function Register() {
                     name={allergy.name}
                   />
                   <span className="capitalize text-sm text-gray-700">
-                    {allergy.name.replace(/_/g, " ")}
+                    {allergyLabels[allergy.name]}
                   </span>
                 </label>
               ))}

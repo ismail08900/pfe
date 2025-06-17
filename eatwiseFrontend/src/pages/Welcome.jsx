@@ -8,7 +8,7 @@ export default function Welcome() {
   const { token } = useUser();
   return (
     <div>
-      <div className="bg-[#F4FFF7] mt-5 text-black py-16 md:pt-28">
+      <div className="bg-[#F4FFF7] mt-5 text-black py-16 md:pt-24">
         <div className="px-6">
           <div className="flex flex-col md:flex-row items-center ">
             <div className="md:w-1/2 mb-10 md:mb-0 animate-slide-up opacity-0">

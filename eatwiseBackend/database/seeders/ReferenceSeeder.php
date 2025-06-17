@@ -29,18 +29,16 @@ class ReferenceSeeder extends Seeder
         ]);
         Goal::insert([
             ['name' => 'weight loss'],
-            ['name' => 'maintenance'],
+            ['name' => 'weight maintenance'],
             ['name' => 'weight gain'],
-            ['name' => 'optimize health'],
             ['name' => 'muscle gain'],
-            ['name' => 'boost energy'],
         ]);
         ActivityLevel::insert([
             ['name' => 'sedentary'],
             ['name' => 'lightly active'],
             ['name' => 'moderately active'],
+            ['name' => 'active'],
             ['name' => 'very active'],
-            ['name' => 'extremely active'],
         ]);
         Allergy::insert([
             ['name' => 'dairy'],

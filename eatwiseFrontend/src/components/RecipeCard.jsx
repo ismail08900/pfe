@@ -44,7 +44,7 @@ export default function RecipeCard({ recipe }) {
             <Clock className="w-4 h-4" /> {recipe.readyInMinutes} min
           </span>
           <span className="flex items-center gap-1">
-            <Flame className="w-4 h-4 text-orange-500" />{" "}
+            <Flame className="w-4 h-4 text-red-500" />{" "}
             {recipe.calories !== "-" ? `${recipe.calories} cal` : "-"}
           </span>
         </div>
@@ -57,7 +57,7 @@ export default function RecipeCard({ recipe }) {
               {d}
             </span>
           ))}
-          {recipe.tags.map((tag) => (
+          {recipe.dishTypes.map((tag) => (
             <span
               key={tag}
               className="bg-gray-100 rounded-lg px-2 py-0.5 text-xs font-semibold text-gray-700 capitalize"

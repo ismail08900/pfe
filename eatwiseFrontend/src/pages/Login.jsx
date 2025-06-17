@@ -3,15 +3,18 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeftCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
 import { useUser } from "../contexts/useUser";
+import Checkbox from "../components/Ckeckbox";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  // const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
   const { setUser, setToken } = useUser();
+  const [check, setCheck] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,7 +22,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    // setError("");
     setLoading(true);
     try {
       const res = await api.post("/login", {
@@ -52,17 +55,10 @@ const Login = () => {
         }
         navigate("/verify-email", { state: { email: form.email } });
       } else {
-        setError(
+        toast.error(
           err.response?.data?.message ||
             "Erreur lors de la connexion. Vérifiez vos identifiants."
         );
-        setIsVisible(true);
-        setTimeout(() => {
-          setIsVisible(false); // déclenche l'animation
-        }, 5000);
-        setTimeout(() => {
-          setError("");
-        }, 6000);
       }
     } finally {
       setLoading(false);
@@ -100,18 +96,16 @@ const Login = () => {
           Entrez vos identifiants pour accéder à votre compte
         </p>
 
-        {error && (
-          <div
-            className={`toast toast-start transition-opacity duration-1000 ${
-              isVisible ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div className="alert alert-error ">
-              <span>{error}</span>
-            </div>
-          </div>
-        )}
-
+        <ToastContainer
+          position="bottom-left"
+          autoClose={4000}
+          newestOnTop={true}
+          closeOnClick={true}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
         <form onSubmit={handleSubmit}>
           {/* Email */}
           <div className="mb-4">
@@ -162,7 +156,10 @@ const Login = () => {
           {/* Options */}
           <div className="flex justify-between items-center mb-4">
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" className="checkbox text-green-600" />
+              <Checkbox
+                checked={check}
+                onChange={(e) => setCheck(e.target.checked)}
+              />
               Se souvenir de moi
             </label>
             <a href="#" className="text-green-600 text-sm hover:underline">

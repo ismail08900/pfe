@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import { ArrowLeftCircle, Clock, Users } from "lucide-react";
+import AddToPlanningButton from "../components/AddToPlanningButton";
 
 function NutritionBar({ label, value, max, unit, color }) {
   const percent = max && value ? Math.min(100, (value / max) * 100) : 100;
@@ -68,13 +69,8 @@ export default function RecipeDetails() {
   const { id } = useParams();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  const backLink =
-    location.state && location.state.from
-      ? location.state.from
-      : "/user-recipes";
+  const navigate = useNavigate();
 
   useEffect(() => {
     api
@@ -92,9 +88,9 @@ export default function RecipeDetails() {
   if (loading)
     return (
       <div className="h-screen flex justify-center items-center">
-        <div className="text-xl font-bold text-gray-600">
-          Chargement&nbsp;&nbsp;
-          <span className="loading loading-dots loading-lg"></span>
+        <div className="text-lg font-bold text-gray-600">
+          Chargement&nbsp;
+          <span className="loading loading-spinner loading-md"></span>
         </div>
       </div>
     );
@@ -150,15 +146,6 @@ export default function RecipeDetails() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10 px-2">
-      <div className="absolute top-6 left-6 z-50">
-        <button
-          onClick={() => navigate(backLink)}
-          className="flex items-center gap-2 text-gray-900 hover:text-gray-500 font-semibold"
-        >
-          <ArrowLeftCircle size={24} />
-          Retour
-        </button>
-      </div>
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8 border-y-4 border-green-600 flex flex-col">
         {/* IMAGE & SUMMARY FLEX */}
         <div className="flex flex-col md:flex-row gap-8">
@@ -190,7 +177,6 @@ export default function RecipeDetails() {
               {recipe.title}
             </h2>
             <div className="text-gray-700 text-base font-normal mb-2 leading-relaxed">
-              {/* Summary en dessous de l'image */}
               <span
                 dangerouslySetInnerHTML={{
                   __html: recipe.summary,
@@ -261,6 +247,8 @@ export default function RecipeDetails() {
             <div className="text-gray-500">Aucune instruction détaillée disponible.</div>
           )}
         </div>
+        {/* AJOUTER AU PLANNING */}
+        <AddToPlanningButton recipe={recipe} />
       </div>
     </div>
   );

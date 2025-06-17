@@ -13,6 +13,11 @@ import UserRecipes from "./pages/UserRecipes";
 import VerifyEmail from "./pages/VerifyEmail";
 import EmailVerified from "./pages/EmailVerified";
 import RecipeDetails from "./pages/RecipeDetails";
+import Diets from "./pages/Diets";
+import Planning from "./pages/Planning";
+import Dashboard from "./pages/Dashboard";
+
+
 export default function App() {
   return (
     <div>
@@ -20,6 +25,7 @@ export default function App() {
         <Route path="/" element={<Navbar />}>
           <Route index element={<Welcome />} />
           <Route path="about" element={<About />} />
+          <Route path="/diets" element={<Diets />} />
           <Route path="learnmore" element={<LearnMore />} />
           <Route
             path="/home"
@@ -45,6 +51,22 @@ export default function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/planning"
+            element={
+              <PrivateRoute>
+                <Planning />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
@@ -52,6 +74,7 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/email-verified" element={<EmailVerified />} />
         <Route path="/recette/:id" element={<RecipeDetails />} />
+        
       </Routes>
     </div>
   );

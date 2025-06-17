@@ -1,14 +1,24 @@
-import { User, CookingPot, Utensils, LogOut } from "lucide-react";
+import {
+  User,
+  Utensils,
+  LogOut,
+  UtensilsCrossed,
+  Calendar,
+  LayoutDashboard,
+} from "lucide-react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/useUser";
 import { useRef, useState, useEffect } from "react";
-import "/src/App.css";
+import { useScrollDirection } from "../hooks/useScrollDirection";
 
 export default function Navbar() {
   const { user, token, logout } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+  const { isVisible } = useScrollDirection();
 
   // Ferme le menu si on clique hors du menu
   useEffect(() => {
@@ -29,6 +39,13 @@ export default function Navbar() {
   const avatarLetter =
     user?.first_name?.length > 0 ? user.first_name[0].toUpperCase() : "?";
 
+  const handleLogout = () => {
+    setShowLogoutModal(false);
+    setMenuOpen(false);
+    logout && logout();
+    navigate("/login");
+  };
+
   // Menu utilisateur à droite
   const userMenu = (
     <div className="relative flex items-center" ref={menuRef}>
@@ -41,12 +58,7 @@ export default function Navbar() {
         {avatarLetter}
       </button>
       {menuOpen && (
-        <div
-          className="absolute right-0 top-12 mt-2
-          w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50
-          animate-fade-in"
-          style={{ minWidth: "260px" }}
-        >
+        <div className="absolute right-0 top-12 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-fade-in">
           {/* Partie profil/nom */}
           <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-500">
@@ -63,12 +75,12 @@ export default function Navbar() {
           <ul className="py-2">
             <li>
               <Link
-                to="/home"
+                to="/dashboard"
                 className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
                 onClick={() => setMenuOpen(false)}
               >
-                <User size={20} />
-                Mon espace
+                <LayoutDashboard size={20} />
+                Tableau de bord
               </Link>
             </li>
             <li>
@@ -77,8 +89,18 @@ export default function Navbar() {
                 className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
                 onClick={() => setMenuOpen(false)}
               >
-                <Utensils size={20} />
+                <UtensilsCrossed size={20} />
                 Plats compatibles
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/planning"
+                className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                <Calendar size={20} />
+                Planning
               </Link>
             </li>
             <li>
@@ -96,8 +118,7 @@ export default function Navbar() {
             <button
               onClick={() => {
                 setMenuOpen(false);
-                logout && logout();
-                navigate("/login");
+                setShowLogoutModal(true);
               }}
               className="w-full text-left flex items-center gap-3 text-red-600 font-semibold px-2 py-2 rounded-xl hover:bg-red-50 transition"
             >
@@ -112,14 +133,21 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="navbar bg-base-100 shadow-md py-3 px-14 fixed z-50 top-0 left-0 w-full">
-        <div className="navbar-start">
-          {/* ... menu burger mobile identique ... */}
-          <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn btn-ghost md:hidden">
+      <nav
+        className={`fixed top-0 left-0 w-full bg-white shadow-md py-3 px-4 md:px-14 z-50 transition-transform duration-300 ${
+          !isVisible ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo et menu mobile */}
+          <div className="flex items-center">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
+                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -128,69 +156,114 @@ export default function Navbar() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M4 6h16M4 12h8m-8 6h16"
+                  d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
+            </button>
+            <div className="flex items-center ml-2 md:ml-0">
+              <Utensils className="text-gray-800" />
+              <span className="font-bold text-2xl text-gray-800 ml-2">
+                EatWise
+              </span>
             </div>
-            <ul
-              tabIndex={0}
-              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
-            >
-              <li>
-                <Link to="/">Accueil</Link>
-              </li>
-              <li>
-                <Link to="/about">À propos</Link>
-              </li>
-              <li>
-                <Link to="/learnmore">Contacts</Link>
-              </li>
-            </ul>
           </div>
-          <CookingPot className="mr-2" />
-          <p className="font-bold text-2xl text-gray-800 -mb-1">EatWise</p>
+
+          {/* Menu desktop */}
+          <div className=" hidden md:flex items-center space-x-10">
+            <Link
+              to="/"
+              className="text-gray-700 font-semibold text-lg hover:text-green-600 transition-colors"
+            >
+              Accueil
+            </Link>
+            <Link
+              to="/diets"
+              className="text-gray-700 font-semibold text-lg hover:text-green-600 transition-colors"
+            >
+              Régimes
+            </Link>
+            <Link
+              to="/about"
+              className="text-gray-700 font-semibold text-lg hover:text-green-600 transition-colors"
+            >
+              À propos
+            </Link>
+          </div>
+
+          {/* Bouton connexion ou menu utilisateur */}
+          <div>
+            {!token ? (
+              <Link
+                to="/login"
+                className="btn inline-flex items-center px-4 pb-[3px] text-white text-lg rounded-xl bg-green-600 hover:bg-green-700"
+              >
+                Se connecter
+              </Link>
+            ) : (
+              userMenu
+            )}
+          </div>
         </div>
-        <div className="navbar-center hidden md:flex">
-          <ul className="menu menu-horizontal px-1">
-            <li>
+
+        {/* Menu mobile */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 pb-4">
+            <div className="flex flex-col space-y-4">
               <Link
                 to="/"
-                className="text-gray-700 font-semibold text-lg bg-inherit btn btn-active border-none hover:text-green-600"
+                className="text-gray-700 font-semibold text-lg hover:text-green-600 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
               >
                 Accueil
               </Link>
-            </li>
-            <li>
+              <Link
+                to="/diets"
+                className="text-gray-700 font-semibold text-lg hover:text-green-600 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Régimes
+              </Link>
               <Link
                 to="/about"
-                className="text-gray-700 font-semibold text-lg bg-inherit btn btn-active border-none hover:text-green-600"
+                className="text-gray-700 font-semibold text-lg hover:text-green-600 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
               >
                 À propos
               </Link>
-            </li>
-            <li>
-              <Link
-                to="/learnmore"
-                className="text-gray-700 font-semibold text-lg bg-inherit btn btn-active border-none hover:text-green-600"
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Modal de confirmation de déconnexion */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Confirmer la déconnexion
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous
+              reconnecter pour accéder à votre compte.
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-colors"
               >
-                Contacts
-              </Link>
-            </li>
-          </ul>
+                Annuler
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors"
+              >
+                Se déconnecter
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="navbar-end">
-          {!token ? (
-            <Link
-              to="/login"
-              className="btn text-white text-lg rounded-xl bg-green-600 hover:bg-[#2E7D32] pb-1"
-            >
-              Se connecter
-            </Link>
-          ) : (
-            userMenu
-          )}
-        </div>
-      </div>
+      )}
+
       <Outlet />
     </>
   );

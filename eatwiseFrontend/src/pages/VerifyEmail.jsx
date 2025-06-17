@@ -1,7 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
-import { MailCheck, Loader2, RefreshCw, CheckCircle, ArrowLeftCircle } from "lucide-react";
+import {
+  MailCheck,
+  Loader2,
+  RefreshCw,
+  CheckCircle,
+  ArrowLeftCircle,
+} from "lucide-react";
 import api from "../api";
 import { useNavigate, Link } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function VerifyEmail() {
   const [message, setMessage] = useState("");
@@ -22,12 +30,17 @@ export default function VerifyEmail() {
         const res = await api.get("/email/is-verified");
         if (res.data.verified) {
           setVerified(true);
-          setMessage("Votre email est déjà vérifié. Vous pouvez vous connecter.");
+          toast.success(
+            "Votre email est déjà vérifié. Vous pouvez vous connecter."
+          );
         } else {
           setVerified(false);
         }
       } catch (e) {
-        setMessage("Erreur lors de la vérification de l'email.");
+        setMessage(
+          e.response?.data?.message ||
+            "Erreur lors de la verification. Veuillez vérifier vos informations."
+        );
       }
     };
     checkVerified();
@@ -52,14 +65,18 @@ export default function VerifyEmail() {
     setMessage("");
     try {
       const res = await api.post("/email/verification-notification");
-      setMessage(res.data.message || "Email de vérification renvoyé !");
+      toast.warning(res.data.message || "Email de vérification renvoyé !");
       setCooldown(30);
     } catch (err) {
       if (err.response?.status === 409) {
         setVerified(true);
-        setMessage("Votre email est déjà vérifié. Vous pouvez vous connecter.");
+        toast.success(
+          "Votre email est déjà vérifié. Vous pouvez vous connecter."
+        );
       } else {
-        setMessage(err.response?.data?.message || "Erreur lors de l'envoi de l'email.");
+        setMessage(
+          err.response?.data?.message || "Erreur lors de l'envoi de l'email."
+        );
       }
     } finally {
       setSending(false);
@@ -68,17 +85,6 @@ export default function VerifyEmail() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4 py-16">
-      {/* Retour Accueil */}
-      <div className="absolute top-6 left-6 z-50">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-gray-900 hover:text-gray-500 font-semibold"
-        >
-          <ArrowLeftCircle size={24} />
-          Accueil
-        </Link>
-      </div>
-
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border-y-4 border-green-600 flex flex-col items-center">
         <div className="flex flex-col items-center mb-6">
           {/* Icône principale */}
@@ -97,7 +103,16 @@ export default function VerifyEmail() {
               : "Un email de vérification a été envoyé à votre adresse. Cliquez sur le lien reçu pour activer votre compte."}
           </p>
         </div>
-
+        <ToastContainer
+          position="bottom-left"
+          autoClose={4000}
+          newestOnTop={true}
+          closeOnClick={true}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
         {/* Message d’information */}
         {message && (
           <div

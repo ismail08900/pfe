@@ -28,7 +28,7 @@ class RegisterController extends Controller
             "diet_type_id" => "nullable|exists:diet_types,id",
             "goal_id" => "required|exists:goals,id",
             "activity_level_id" => "required|exists:activity_levels,id",
-            "calorie_target" => "nullable|integer",
+            "weight_target" => "nullable|integer",
             "custom_diet" => "nullable|string|max:255",
             "custom_allergy" => "nullable|string|max:255",
             "allergy_ids" => "nullable|array",
@@ -48,7 +48,7 @@ class RegisterController extends Controller
             "diet_type_id" => $validated["diet_type_id"],
             "goal_id" => $validated["goal_id"],
             "activity_level_id" => $validated["activity_level_id"],
-            "calorie_target" => $validated["calorie_target"] ?? null,
+            "weight_target" => $validated["weight_target"] ?? null,
             "custom_diet" => $validated["custom_diet"] ?? null,
             "custom_allergy" => $validated["custom_allergy"] ?? null,
         ]);

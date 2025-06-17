@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Http\Controllers\PlanningController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,9 +25,7 @@ use App\Http\Middleware\EnsureEmailIsVerified;
 |
 */
 
-Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->get('/user', function (Request $request) {
-    return $request->user()->load('dietType', 'allergies');
-});
+
 
 Route::get("/tables-info", function () {
     $allergies = ActivityLevel::all();
@@ -38,32 +37,35 @@ Route::get("/tables-info", function () {
 
 
 Route::post('/register', [RegisterController::class, 'register']);
-
 Route::post('/login', [LoginController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->group(function () {
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::put('/user/preferences', [UserController::class, 'updatePreferences']);
+    Route::get('/user', function (Request $request) {
+        return $request->user()->load('dietType', 'allergies');
+    });
+    Route::get('/user-recipes', [RecipeController::class, 'getUserRecipes']);
+    Route::get('/recipes/{id}', [RecipeController::class, 'getRecipeDetails']);
     Route::get('/me', function (Request $request) {
         return $request->user()->load('dietType', 'allergies');
     });
     Route::post('/logout', [LoginController::class, 'logout']);
-    // ... autres routes protégées
-});
-
-Route::middleware('auth:sanctum')->get('/me/allergies', [UserController::class, 'myAllergies']);
-
-Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->get('/user-recipes', [RecipeController::class, 'getUserRecipes']);
-Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->get('/recipes/{id}', [RecipeController::class, 'getRecipeDetails']);
-Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->group(function () {
-    Route::put('/user/profile', [UserController::class, 'updateProfile']);
-    Route::put('/user/preferences', [UserController::class, 'updatePreferences']);
-});
-
-
-
-Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me/allergies', [UserController::class, 'myAllergies']);
     Route::get('/diets', [PreferenceController::class, 'diets']);
     Route::get('/allergies', [PreferenceController::class, 'allergies']);
+    Route::get('/planning', [PlanningController::class, 'getCurrentWeekPlanning']);
+    Route::post('/planning', [PlanningController::class, 'saveCurrentWeekPlanning']);
+    Route::get('/user/tdee', [UserController::class, 'tdee']);
+    Route::get('/planning/consumptions', [PlanningController::class, 'consumptions']);
+    Route::get('/planning/monthly-consumptions', [PlanningController::class, 'monthlyConsumptions']);
+    Route::get('/planning/today', [PlanningController::class, 'getTodayMeals']);
 });
+
+
+
+
+
 
 // Pour que le front puisse charger les options :
 Route::get('/allergies', fn() => Allergy::all());
@@ -74,16 +76,19 @@ Route::get('/activities-level', fn() => ActivityLevel::all());
 
 
 
-// Pour vérifier l’email (le lien de l’email redirigera ici)
+// Pour vérifier l'email (le lien de l'email redirigera ici)
 use Illuminate\Support\Facades\Redirect;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Events\Verified;
-// Pour renvoyer l’email de vérification
+// Pour renvoyer l'email de vérification
 use App\Http\Controllers\Auth\EmailVerificationController;
 
-Route::middleware(['auth:sanctum'])->post('/email/verification-notification', [EmailVerificationController::class, 'send']);
-Route::middleware(['auth:sanctum'])->get('/email/is-verified', [EmailVerificationController::class, 'isVerified']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'send']);
+    Route::get('/email/is-verified', [EmailVerificationController::class, 'isVerified']);
+});
+
 Route::get('/email/verify/{id}/{hash}', function ($id, $hash) {
     $user = User::findOrFail($id);
 

@@ -2,176 +2,29 @@ import React, { useEffect, useState, useRef } from "react";
 import api from "../api";
 import RecipeCard, { formatRecipe } from "../components/RecipeCard";
 import {
-  Check,
   CheckCheck,
   ChefHat,
   ChevronDown,
   ChevronUp,
+  CookingPot,
   Filter,
   FunnelX,
   Minus,
   Plus,
   RotateCcw,
-  Utensils,
+  TriangleAlert,
 } from "lucide-react";
+import { INGREDIENT_GROUPS, CUISINES, MEAL_TYPES } from "../utils/filter";
+import {
+  INGREDIENT_LABELS,
+  INGREDIENT_GROUP_LABELS_FR,
+} from "../utils/ingredientLabels";
+import {
+  CUISINE_LABELS_FR,
+  MEAL_TYPE_LABELS_FR,
+} from "../utils/cuisineMealLabels";
 
-// Ingredient groups for dropdown navigation
-const INGREDIENT_GROUPS = {
-  meats_and_poultry: [
-    "chicken",
-    "beef",
-    "turkey",
-    "veal",
-    "lamb",
-    "duck",
-    "rabbit",
-  ],
-  fish_and_seafood: [
-    "tuna",
-    "shrimp",
-    "salmon",
-    "sardine",
-    "hake",
-    "cod",
-    "tilapia",
-    "monkfish",
-  ],
-  dairy_and_eggs: ["egg", "milk", "cheese", "cream", "parmesan"],
-  cereals_and_starches: [
-    "rice",
-    "pasta",
-    "bread",
-    "bulgur",
-    "quinoa",
-    "semolina",
-    "polenta",
-    "buckwheat",
-    "rye",
-    "barley",
-    "spelt",
-  ],
-  root_vegetables: [
-    "potato",
-    "sweet potato",
-    "beetroot",
-    "turnip",
-    "radish",
-    "carrot",
-  ],
-  leafy_and_cruciferous_vegetables: [
-    "spinach",
-    "arugula",
-    "parsley",
-    "watercress",
-    "lettuce",
-    "endive",
-    "cabbage",
-    "chard",
-    "basil",
-    "coriander",
-    "mint",
-    "rosemary",
-    "leek",
-    "cauliflower",
-    "broccoli",
-    "zucchini",
-    "eggplant",
-    "squash",
-    "pattypan squash",
-    "onion",
-    "garlic",
-    "pepper",
-  ],
-  fruit_vegetables: ["tomato", "avocado", "corn", "capers", "lemon"],
-  nuts_and_seeds: ["walnut", "almond", "hazelnut", "coconut", "sesame"],
-  legumes: [
-    "lentil",
-    "chickpea",
-    "bean",
-    "soy",
-    "tofu",
-    "tempeh",
-    "seitan",
-    "miso",
-  ],
-  fresh_fruits: [
-    "apple",
-    "banana",
-    "orange",
-    "strawberry",
-    "blueberry",
-    "pineapple",
-    "pear",
-    "kiwi",
-    "fig",
-    "date",
-    "apricot",
-  ],
-  others: ["pesto", "honey", "mustard"],
-};
-
-const INGREDIENT_GROUP_LABELS = {
-  meats_and_poultry: "Meats & Poultry",
-  fish_and_seafood: "Fish & Seafood",
-  dairy_and_eggs: "Dairy & Eggs",
-  cereals_and_starches: "Cereals & Starches",
-  root_vegetables: "Root Vegetables",
-  leafy_and_cruciferous_vegetables: "Leafy & Cruciferous Vegetables",
-  fruit_vegetables: "Fruit Vegetables",
-  nuts_and_seeds: "Nuts & Seeds",
-  legumes: "Legumes",
-  fresh_fruits: "Fresh Fruits",
-  others: "Others",
-};
-
-const CUISINES = [
-  "African",
-  "Asian",
-  "American",
-  "British",
-  "Cajun",
-  "Caribbean",
-  "Chinese",
-  "Eastern European",
-  "European",
-  "French",
-  "German",
-  "Greek",
-  "Indian",
-  "Irish",
-  "Italian",
-  "Japanese",
-  "Jewish",
-  "Korean",
-  "Latin American",
-  "Mediterranean",
-  "Mexican",
-  "Middle Eastern",
-  "Nordic",
-  "Southern",
-  "Spanish",
-  "Thai",
-  "Vietnamese",
-];
-
-const MEAL_TYPES = [
-  "main course",
-  "side dish",
-  "dessert",
-  "appetizer",
-  "salad",
-  "bread",
-  "breakfast",
-  "soup",
-  "beverage",
-  "sauce",
-  "marinade",
-  "fingerfood",
-  "snack",
-  "drink",
-];
-
-function IngredientDropdownItem({ children, onClick,color }) {
+function IngredientDropdownItem({ children, onClick, color }) {
   return (
     <button
       type="button"
@@ -191,7 +44,7 @@ function IngredientGroupDropdown({
   setSelectedGroup,
   onIngredientSelect,
   dropdownRef,
-  color
+  color,
 }) {
   return show ? (
     <div
@@ -206,7 +59,7 @@ function IngredientGroupDropdown({
               onClick={() => setSelectedGroup(group)}
               color={`${color}`}
             >
-              {INGREDIENT_GROUP_LABELS[group]}
+              {INGREDIENT_GROUP_LABELS_FR[group] || group}
             </IngredientDropdownItem>
           ))}
         </div>
@@ -217,7 +70,7 @@ function IngredientGroupDropdown({
             type="button"
             onClick={() => setSelectedGroup(null)}
           >
-            ← Back to groups
+            ← Retour aux groupes
           </button>
           {INGREDIENT_GROUPS[selectedGroup].map((ing) => (
             <IngredientDropdownItem
@@ -228,7 +81,7 @@ function IngredientGroupDropdown({
                 setSelectedGroup(null);
               }}
             >
-              {ing}
+              {INGREDIENT_LABELS[ing] || ing}
             </IngredientDropdownItem>
           ))}
         </div>
@@ -250,9 +103,7 @@ function RangeInput({
 }) {
   return (
     <div className="flex flex-col items-center w-44">
-      <span className="text-sm mb-2 font-semibold" style={{ color: color }}>
-        {label}
-      </span>
+      <span className="text-sm mb-2 font-semibold">{label}</span>
       <input
         id={id}
         type="range"
@@ -263,7 +114,7 @@ function RangeInput({
         onChange={onChange}
         className={`range text-white [--range-bg:gainsboro] [--range-thumb:black] [--range-fill:0] w-full`}
       />
-      <span className={`font-bold text-black`}>
+      <span className={`font-bold text-${color}`}>
         {value}
         {unit}
       </span>
@@ -331,13 +182,22 @@ function FilterBar({
 
   if (!show) return null;
 
+  // Helpers to display ingredients in French in the input (visual only)
+  function displayIngredientsFr(ingredientsStr) {
+    if (!ingredientsStr) return "";
+    return ingredientsStr
+      .split(",")
+      .map((x) => INGREDIENT_LABELS[x.trim()] || x.trim())
+      .join(", ");
+  }
+
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         onFilter();
       }}
-      className="w-full bg-white rounded-3xl shadow-lg p-6 mb-10 flex flex-col gap-5 backdrop-blur-md relative z-10 animate-fade-in"
+      className="w-full bg-white rounded-3xl shadow-lg p-6 mt-8 mb-10 flex flex-col gap-5 backdrop-blur-md relative z-10 animate-fade-in"
     >
       {/* 1: Include & Exclude */}
       <div className="w-full flex flex-col md:flex-row gap-6 items-center">
@@ -350,13 +210,21 @@ function FilterBar({
               type="text"
               className="w-full border-green-600 pl-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 placeholder:text-gray-400 bg-white text-base"
               placeholder="ex. poulet, riz, pomme, ..."
-              value={filters.includeIngredients}
-              onChange={(e) =>
+              value={displayIngredientsFr(filters.includeIngredients)}
+              onChange={(e) => {
                 setFilters((f) => ({
                   ...f,
-                  includeIngredients: e.target.value,
-                }))
-              }
+                  includeIngredients: e.target.value
+                    .split(",")
+                    .map((val) => {
+                      const foundEn = Object.entries(INGREDIENT_LABELS).find(
+                        ([fr]) => fr.toLowerCase() === val.trim().toLowerCase()
+                      );
+                      return foundEn ? foundEn[0] : val.trim();
+                    })
+                    .join(","),
+                }));
+              }}
             />
             <button
               ref={includeButtonRef}
@@ -381,7 +249,7 @@ function FilterBar({
                 val.push(ing);
                 setFilters((f) => ({
                   ...f,
-                  includeIngredients: val.join(", "),
+                  includeIngredients: val.join(","),
                 }));
               }
             }}
@@ -398,13 +266,21 @@ function FilterBar({
               type="text"
               className="w-full pl-4 py-2 border border-red-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600 placeholder:text-gray-400 bg-white text-base"
               placeholder="ex. fromage, avocat, ..."
-              value={filters.excludeIngredients}
-              onChange={(e) =>
+              value={displayIngredientsFr(filters.excludeIngredients)}
+              onChange={(e) => {
                 setFilters((f) => ({
                   ...f,
-                  excludeIngredients: e.target.value,
-                }))
-              }
+                  excludeIngredients: e.target.value
+                    .split(",")
+                    .map((val) => {
+                      const foundEn = Object.entries(INGREDIENT_LABELS).find(
+                        ([fr]) => fr.toLowerCase() === val.trim().toLowerCase()
+                      );
+                      return foundEn ? foundEn[0] : val.trim();
+                    })
+                    .join(","),
+                }));
+              }}
             />
             <button
               ref={excludeButtonRef}
@@ -429,7 +305,7 @@ function FilterBar({
                 val.push(ing);
                 setFilters((f) => ({
                   ...f,
-                  excludeIngredients: val.join(", "),
+                  excludeIngredients: val.join(","),
                 }));
               }
             }}
@@ -464,10 +340,10 @@ function FilterBar({
                 setFilters((f) => ({ ...f, cuisine: e.target.value }))
               }
             >
-              <option value="">All cuisines</option>
+              <option value="">Toutes les cuisines</option>
               {CUISINES.map((cuisine) => (
                 <option value={cuisine} key={cuisine}>
-                  {cuisine}
+                  {CUISINE_LABELS_FR[cuisine] || cuisine}
                 </option>
               ))}
             </select>
@@ -479,7 +355,7 @@ function FilterBar({
           </label>
           <div className="relative">
             <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-              <Utensils size={18} />
+              <CookingPot size={18} />
             </span>
             <span className="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
               {focusedSelect === "type" ? (
@@ -497,10 +373,10 @@ function FilterBar({
                 setFilters((f) => ({ ...f, type: e.target.value }))
               }
             >
-              <option value="">All types</option>
+              <option value="">Tous les types</option>
               {MEAL_TYPES.map((type) => (
                 <option value={type} key={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {MEAL_TYPE_LABELS_FR[type] || type}
                 </option>
               ))}
             </select>
@@ -519,7 +395,7 @@ function FilterBar({
             min={0}
             max={1500}
             unit=" kcal"
-            color="#f97316"
+            color="red-500"
             id="filter-cal"
             step={10}
           />
@@ -532,7 +408,7 @@ function FilterBar({
             min={0}
             max={120}
             unit=" g"
-            color="#22c55e"
+            color="green-600"
             id="filter-protein"
           />
           <RangeInput
@@ -544,7 +420,7 @@ function FilterBar({
             min={0}
             max={120}
             unit=" g"
-            color="#3b82f6"
+            color="orange-500"
             id="filter-carbs"
           />
           <RangeInput
@@ -556,7 +432,7 @@ function FilterBar({
             min={0}
             max={120}
             unit=" g"
-            color="#eab308"
+            color="blue-700"
             id="filter-fat"
           />
           <RangeInput
@@ -585,7 +461,7 @@ function FilterBar({
             min={0}
             max={1500}
             unit=" kcal"
-            color="#f97316"
+            color="red-500"
             id="filter-min-cal"
             step={10}
           />
@@ -598,7 +474,7 @@ function FilterBar({
             min={0}
             max={120}
             unit=" g"
-            color="#22c55e"
+            color="green-600"
             id="filter-min-protein"
           />
           <RangeInput
@@ -610,7 +486,7 @@ function FilterBar({
             min={0}
             max={120}
             unit=" g"
-            color="#3b82f6"
+            color="orange-500"
             id="filter-min-carbs"
           />
           <RangeInput
@@ -622,7 +498,7 @@ function FilterBar({
             min={0}
             max={120}
             unit=" g"
-            color="#eab308"
+            color="blue-700"
             id="filter-min-fat"
           />
           <RangeInput
@@ -674,7 +550,6 @@ function FilterBar({
             ) : (
               <Plus className="w-5 h-5" />
             )}
-            
           </button>
         </div>
       </div>
@@ -793,23 +668,29 @@ export default function UserRecipes() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen pt-20">
+    <div className="bg-gray-50 min-h-screen pt-16">
       <div className="max-w-6xl mx-auto px-4 mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-4 mt-8">
-              Plats compatibles avec votre profil
-            </h2>
-            <p className="text-gray-600 mb-2">
-              Affinez votre recherche par ingrédients, cuisine, type de repas,
-              temps, calories, macronutriments.
-              <br />
-              <span className="text-sm text-green-700 underline">
-                Les plats sont déjà filtrés en fonction de votre régime
-                alimentaire et de vos allergies.
-              </span>
-            </p>
-          </div>
+        <h2 className="text-4xl text-center font-bold text-gray-900 mt-8 mb-2">
+          Plats compatibles avec votre profil
+        </h2>
+        <p className="text-gray-600 text-center">
+          Affinez votre recherche par ingrédients, cuisine, type de repas,
+          temps, calories, macronutriments.
+        </p>
+        <div className="flex justify-between mt-8">
+          <span className="flex text-md text-red-600">
+            <TriangleAlert className="w-6 h-6 mr-2" />
+            Les plats sont déjà filtrés en fonction de votre régime alimentaire
+            et de vos allergies.
+          </span>
+          {/* <button
+            onClick={() => fetchRecipes()}
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-300 ml-52"
+            title="Actualiser la liste"
+          >
+            <RotateCcw className="w-5 h-5" />
+            Actualiser
+          </button> */}
           <button
             onClick={() => setShowFilters((v) => !v)}
             className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-300"
@@ -842,9 +723,9 @@ export default function UserRecipes() {
         />
         {loading ? (
           <div className="h-40 flex justify-center items-center">
-            <div className="text-xl font-bold text-gray-600">
-              Loading&nbsp;
-              <span className="loading loading-dots loading-lg"></span>
+            <div className="text-lg font-bold mt-32">
+              Chargement&nbsp;
+              <span className="loading loading-spinner loading-md"></span>
             </div>
           </div>
         ) : (

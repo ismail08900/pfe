@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLevel;
+use App\Models\Goal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\NutritionService;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -65,5 +69,24 @@ class UserController extends Controller
             'message' => 'Profil mis à jour',
             'user' => $user
         ]);
+    }
+
+    public function tdee()
+    {
+        $user = Auth::user();
+        // Récupérer l'objet (relation Eloquent) associé à l'utilisateur
+        $activity = ActivityLevel::find($user->activity_level_id);
+        $goal = Goal::find($user->goal_id);
+
+        $tdee = NutritionService::calculateTDEE(
+            $user->gender,
+            $user->weight,
+            $user->height,
+            $user->birth_date,
+            $activity->name ?? 'sedentary',
+            $goal->name ?? 'weight maintenance'
+        );
+
+        return response()->json($tdee);
     }
 }
