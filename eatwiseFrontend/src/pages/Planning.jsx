@@ -215,7 +215,7 @@ export default function Planning() {
               </div>
             )}
           </div>
-          <h2 className="text-4xl font-bold text-center text-gray-900">
+          <h2 className="text-4xl font-bold ml-8 text-center text-gray-900">
             Mon planning de la semaine
           </h2>
           <div className="w-[100px]"></div> {/* Spacer pour centrer le titre */}

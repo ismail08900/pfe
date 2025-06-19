@@ -116,7 +116,7 @@ export default function Welcome() {
             profil nutritionnel, vos préférences alimentaires et vos objectifs
             santé.
           </p>
-          <Link to={!token?"/register":"/home"} className=" btn bg-white text-green-600 text-lg rounded-xl hover:bg-gray-100  px-8 pt-6 pb-7">
+          <Link to={!token?"/register":"/dashboard"} className=" btn bg-white text-green-600 text-lg rounded-xl hover:bg-gray-100  px-8 pt-6 pb-7">
            {!token? "Commencer maintenant":"Consulter Mon profil"}
           </Link>
         </div>

@@ -6,9 +6,12 @@ import {
   EditProfileModal,
   EditPreferencesModal,
 } from "../components/ProfileEditModals";
+import { dietLabels, allergyLabels } from "../utils/labels";
+import {  ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Profile() {
-  const { user, setUser, logout } = useUser();
+  const { user, setUser } = useUser();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editPrefsOpen, setEditPrefsOpen] = useState(false);
 
@@ -24,7 +27,8 @@ export default function Profile() {
       ]);
       setAllDiets(dietsRes.data);
       setAllAllergies(allergiesRes.data);
-    } catch (err) {
+    } catch (e) {
+      console.log(e);
       setAllDiets([]);
       setAllAllergies([]);
     }
@@ -36,7 +40,8 @@ export default function Profile() {
       // On utilise /user qui doit retourner dietType et allergies liés !
       const userRes = await api.get("/user");
       setUser(userRes.data);
-    } catch (err) {
+    } catch (e) {
+      console.log(e);
       // Optionnel: gestion d'erreur
     }
   };
@@ -63,17 +68,32 @@ export default function Profile() {
     }
   };
 
-  // Nom du régime : relation ou fallback par id
+  // Nom du régime : relation ou fallback par id, traduit en français
   const dietName =
-    user?.dietType?.name ||
-    allDiets.find((d) => d.id === (user?.diet_type_id || user?.dietType?.id))
-      ?.name ||
+    (user?.dietType?.name && dietLabels[user.dietType.name]
+      ? dietLabels[user.dietType.name]
+      : user?.dietType?.name) ||
+    (allDiets.find(
+      (d) => d.id === (user?.diet_type_id || user?.dietType?.id)
+    ) &&
+    dietLabels[
+      allDiets.find((d) => d.id === (user?.diet_type_id || user?.dietType?.id))
+        ?.name
+    ]
+      ? dietLabels[
+          allDiets.find(
+            (d) => d.id === (user?.diet_type_id || user?.dietType?.id)
+          )?.name
+        ]
+      : allDiets.find(
+          (d) => d.id === (user?.diet_type_id || user?.dietType?.id)
+        )?.name) ||
     "Non renseigné";
 
-  // Allergies (relation ou vide)
+  // Allergies (relation ou vide), traduites en français
   const allergies =
     Array.isArray(user?.allergies) && user.allergies.length
-      ? user.allergies.map((a) => a.name).join(", ")
+      ? user.allergies.map((a) => allergyLabels[a.name] || a.name).join(", ")
       : "Aucune";
 
   // Exemple statique pour les stats (à remplacer par vraies valeurs si tu as)
@@ -82,8 +102,18 @@ export default function Profile() {
   const registered = user?.created_at ?? "11/01/2024";
 
   return (
-    <div className="bg-gray-50 pt-1"> 
-      <div className="max-w-2xl mx-auto mt-24 bg-white rounded-2xl shadow-lg p-8">
+    <div className="bg-gray-50 pt-1">
+      <ToastContainer
+          position="bottom-left"
+          autoClose={4000}
+          newestOnTop={true}
+          closeOnClick={true}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
+      <div className="max-w-2xl mx-auto mt-20 bg-white rounded-2xl shadow-lg p-8">
         {/* Avatar + nom */}
         <div className="flex items-center gap-6 mb-8">
           <div className="w-20 h-20 rounded-full bg-green-200 flex items-center justify-center text-4xl font-bold text-green-700 shadow">

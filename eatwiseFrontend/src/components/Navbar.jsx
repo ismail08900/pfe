@@ -5,6 +5,7 @@ import {
   UtensilsCrossed,
   Calendar,
   LayoutDashboard,
+  HandPlatter,
 } from "lucide-react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/useUser";
@@ -93,6 +94,16 @@ export default function Navbar() {
                 Plats compatibles
               </Link>
             </li>
+             <li>
+              <Link
+                to="/restaurant-dishes"
+                className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                <HandPlatter size={20} />
+                Restaurants
+              </Link>
+            </li>
             <li>
               <Link
                 to="/planning"
@@ -134,7 +145,7 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 w-full bg-white shadow-md py-3 px-4 md:px-14 z-50 transition-transform duration-300 ${
+        className={`fixed top-0 left-0 w-full bg-white shadow-md py-3 px-4 md:px-10 z-50 transition-transform duration-300 ${
           !isVisible ? "-translate-y-full" : "translate-y-0"
         }`}
       >

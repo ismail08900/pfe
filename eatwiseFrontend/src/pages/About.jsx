@@ -162,7 +162,7 @@ const About = () => {
             alimentation parfaitement adaptée à vos besoins.
           </p>
           <Link
-            to={!token ? "/register" : "/home"}
+            to={!token ? "/register" : "/dashboard"}
             className="btn bg-white text-green-600 hover:bg-gray-100 text-md rounded-xl"
           >
             {!token ? "Commencer maintenant" : "Consulter Mon profil"}

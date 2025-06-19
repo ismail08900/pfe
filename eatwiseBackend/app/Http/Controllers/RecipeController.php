@@ -43,6 +43,7 @@ class RecipeController extends Controller
         $params = [
             'apiKey' => env('SPOONACULAR_API_KEY'),
             'number' => 3,
+            'sort' => 'random',
             'addRecipeNutrition' => 'true',
             'excludeIngredients' => 'pork,bacon,ham,alcohol,wine,beer,rum,gelatin,lard,prosciutto,chorizo,pepperoni,sausage',
         ];

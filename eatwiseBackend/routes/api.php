@@ -13,6 +13,8 @@ use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Controllers\PlanningController;
+use App\Http\Controllers\AuthRestaurantController;
+use App\Models\Dish;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +40,26 @@ Route::get("/tables-info", function () {
 
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
+
+
+//
+
+Route::prefix('restaurant')->group(function () {
+    Route::post('/register', [AuthRestaurantController::class, 'register']);
+    Route::post('/login', [AuthRestaurantController::class, 'login']);
+    Route::middleware('auth:sanctum')->post('/logout', [AuthRestaurantController::class, 'logout']);
+});
+
+use App\Http\Controllers\RestaurantDishController;
+
+Route::middleware('auth:sanctum')->prefix('restaurant')->group(function () {
+    Route::get('/dishes', [RestaurantDishController::class, 'index']);
+    Route::post('/dishes', [RestaurantDishController::class, 'store']);
+    Route::put('/dishes/{id}', [RestaurantDishController::class, 'update']);
+    Route::delete('/dishes/{id}', [RestaurantDishController::class, 'destroy']);
+});
+
+//
 
 Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->group(function () {
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
@@ -106,3 +128,31 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash) {
 
     return Redirect::to('http://localhost:5173/email-verified');
 })->middleware(['signed'])->name('verification.verify');
+
+Route::get('/dishes-public', function () {
+    return Dish::with(['diets', 'allergies', 'restaurant'])->orderByDesc('created_at')->get();
+});
+
+Route::middleware('auth:sanctum')->get('/dishes-user', function (Request $request) {
+    $query = \App\Models\Dish::with(['diets', 'allergies', 'restaurant']);
+
+    // Filtres min
+    foreach (['calories', 'proteins', 'lipids', 'carbs'] as $field) {
+        $min = $request->query('min_' . $field);
+        if ($min !== null && $min !== "") $query->where($field, '>=', $min);
+    }
+
+    // Filtre max prix
+    $maxPrice = $request->query('max_price');
+    if ($maxPrice !== null && $maxPrice !== "") {
+        $query->where('price', '<=', $maxPrice);
+    }
+
+    // Filtre type de repas
+    $type = $request->query('type');
+    if ($type) {
+        $query->where('type', $type);
+    }
+
+    return $query->orderByDesc('created_at')->get();
+});

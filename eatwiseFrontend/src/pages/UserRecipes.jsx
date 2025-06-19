@@ -669,7 +669,7 @@ export default function UserRecipes() {
 
   return (
     <div className="bg-gray-50 min-h-screen pt-16">
-      <div className="max-w-6xl mx-auto px-4 mb-8">
+      <div className="max-w-6xl mx-auto px-4 pb-8">
         <h2 className="text-4xl text-center font-bold text-gray-900 mt-8 mb-2">
           Plats compatibles avec votre profil
         </h2>

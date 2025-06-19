@@ -35,10 +35,11 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
             'email'      => 'required|email|unique:users,email,' . $user->id,
-            'phone'      => 'nullable|string|max:30',
-            'birth_date' => 'nullable|date',
             'height'     => 'nullable|integer',
             'weight'     => 'nullable|integer',
+            'weight_target' => 'nullable|integer',
+            'activity_level_id' => 'nullable|exists:activity_levels,id',
+            'goal_id' => 'nullable|exists:goals,id',
             'diet_type_id' => 'nullable|exists:diet_types,id',
             'allergy_ids' => 'nullable|array',
             'allergy_ids.*' => 'exists:allergies,id',
@@ -50,10 +51,11 @@ class UserController extends Controller
         $user->first_name = $request->first_name;
         $user->last_name  = $request->last_name;
         $user->email      = $request->email;
-        $user->phone      = $request->phone ?? null;
-        $user->birth_date = $request->birth_date ?? null;
         $user->height     = $request->height ?? null;
         $user->weight     = $request->weight ?? null;
+        $user->weight_target = $request->weight_target ?? null;
+        $user->activity_level_id = $request->activity_level_id ?? null;
+        $user->goal_id = $request->goal_id ?? null;
         $user->diet_type_id = $request->diet_type_id ?? null;
         $user->save();
 

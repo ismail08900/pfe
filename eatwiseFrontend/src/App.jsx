@@ -16,7 +16,11 @@ import RecipeDetails from "./pages/RecipeDetails";
 import Diets from "./pages/Diets";
 import Planning from "./pages/Planning";
 import Dashboard from "./pages/Dashboard";
-
+import RestaurantRegister from "./pages/RestaurantRegister";
+import RestaurantLogin from "./pages/RestaurantLogin";
+import RestaurantDashboard from "./pages/RestaurantDashboard";
+import PrivateRouter from "./components/PrivaltRouter";
+import AllDishes from "./pages/AllDishes";
 
 export default function App() {
   return (
@@ -67,14 +71,32 @@ export default function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/restaurant-dishes"
+            element={
+              <PrivateRoute>
+                <AllDishes />
+              </PrivateRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/email-verified" element={<EmailVerified />} />
         <Route path="/recette/:id" element={<RecipeDetails />} />
-        
+        <Route path="/restaurant/register" element={<RestaurantRegister />} />
+        <Route path="/restaurant/login" element={<RestaurantLogin />} />
+        <Route
+          path="/restaurant/dashboard"
+          element={
+            <PrivateRouter>
+              <RestaurantDashboard />
+            </PrivateRouter>
+          }
+        />
       </Routes>
     </div>
   );

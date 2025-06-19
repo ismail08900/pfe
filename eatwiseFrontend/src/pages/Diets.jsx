@@ -10,9 +10,11 @@ import {
   Wheat,
   CakeSlice,
   Milk,
+  ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
+import { useUser } from "../contexts/useUser";
 
 const diets = [
   {
@@ -84,6 +86,7 @@ const diets = [
 ];
 
 export default function Diets() {
+  const { token } = useUser();
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -145,11 +148,13 @@ export default function Diets() {
             Explorez nos suggestions de repas et trouvez des restaurants adaptés
             à votre régime alimentaire avec EatWise.
           </p>
-          <Link
-            to="/"
+         <Link
+            to={!token ? "/register" : "/dashboard"}
             className="btn bg-white text-green-600 hover:bg-gray-100 text-md rounded-xl"
           >
-            Retour à l'accueil
+            {!token ? "Commencer maintenant" : "Consulter Mon profil"}
+
+            <ArrowRight size={16} className="ml-2 mt-1" />
           </Link>
         </div>
       </section>
