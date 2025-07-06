@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ReferenceSeeder::class,
         ]);
+        $this->call(AdminSeeder::class);
     }
 }

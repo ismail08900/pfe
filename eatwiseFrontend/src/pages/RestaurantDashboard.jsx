@@ -9,11 +9,13 @@ import {
   X,
   Image as ImageIcon,
   LogOut,
+  KeyRound,
 } from "lucide-react";
 import apiRestaurant from "./apiRestaurant";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import ChangeRestaurantPasswordModal from "../components/ChangeRestaurantPasswordModal";
 // ...
 
 // Utilitaire pour afficher le type en français joli
@@ -50,6 +52,7 @@ const RestaurantDashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [dishToDelete, setDishToDelete] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [restaurantName, setRestaurantName] = useState("");
 
   const navigate = useNavigate();
@@ -79,7 +82,7 @@ const RestaurantDashboard = () => {
       try {
         const parsed = JSON.parse(info);
         setRestaurantName(parsed.name || "");
-      } catch {}
+      } catch(e) {console.log(e);}
     }
   }, []);
 
@@ -248,135 +251,168 @@ const RestaurantDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-2">
-      <ToastContainer position="bottom-left" autoClose={4000} theme="colored" />
-      <div className="max-w-5xl mx-auto relative">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Utensils className="text-green-600" size={28} />
-            Tableau de bord{restaurantName ? ` (${restaurantName})` : ""}
-          </h1>
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className="absolute -top-8 -right-24 p-2 text-red-600 hover:text-red-800 bg-white rounded-full shadow transition"
-            title="Déconnexion"
-          >
-            <LogOut size={28} />
-          </button>
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl shadow hover:bg-green-700"
-            onClick={() => openModal()}
-          >
-            <PlusCircle size={20} />
-            Ajouter un plat
-          </button>
+    <>
+      <ToastContainer
+        position="bottom-left"
+        autoClose={4000}
+        newestOnTop={true}
+        closeOnClick={true}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+      {/* Header */}
+      <header className="bg-white shadow-md sticky top-0 z-40">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center ml-2 md:ml-0">
+            <Utensils className="text-gray-900" />
+            <span className="font-bold text-2xl text-gray-900 ml-2">
+              EatWise
+            </span>
+            <span className="ml-3">Restaurants</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-900 border border-gray-900 rounded-xl p-2"
+            >
+              <KeyRound size={16} />
+              Changer le mot de passe
+            </button>
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="flex items-center gap-2 text-sm font-medium border border-red-500 p-2 rounded-xl text-red-500"
+            >
+              <LogOut size={16} />
+              Déconnexion
+            </button>
+          </div>
         </div>
+      </header>
 
-        {/* Tableau des plats */}
-        <div className="bg-white rounded-xl shadow p-4 overflow-x-auto">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="animate-spin text-green-600" size={32} />
-            </div>
-          ) : dishes.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
-              Aucun plat enregistré.
-            </div>
-          ) : (
-            <table className="min-w-full">
-              <thead>
-                <tr className="text-sm text-gray-700 border-b">
-                  <th className="py-2">Image</th>
-                  <th>Nom</th>
-                  <th>Type</th>
-                  <th>Prix (DH)</th>
-                  <th>Calories</th>
-                  <th>Protéines</th>
-                  <th>Lipides</th>
-                  <th>Glucides</th>
-                  <th>Régimes</th>
-                  <th>Allergies</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dishes.map((dish) => (
-                  <tr
-                    key={dish.id}
-                    className="border-b text-center text-xs sm:text-sm"
-                  >
-                    <td className="py-1">
-                      {dish.image ? (
-                        <img
-                          src={`${
-                            import.meta.env.VITE_STORAGE_URL || "/storage/"
-                          }${dish.image}`}
-                          alt={dish.name}
-                          className="h-14 w-14 object-cover rounded"
-                        />
-                      ) : (
-                        <ImageIcon
-                          className="mx-auto text-gray-300"
-                          size={28}
-                        />
-                      )}
-                    </td>
-                    <td>{dish.name}</td>
-                    <td>{typeLabels[dish.type] || dish.type}</td>
-                    <td>{dish.price}</td>
-                    <td>{dish.calories}</td>
-                    <td>{dish.proteins}</td>
-                    <td>{dish.lipids}</td>
-                    <td>{dish.carbs}</td>
-                    <td>
-                      <div className="flex flex-col gap-0.5">
-                        {dish.diets.map((d) => (
-                          <span
-                            className="inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs"
-                            key={d.id}
-                          >
-                            {d.name}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex flex-col gap-0.5">
-                        {dish.allergies.map((a) => (
-                          <span
-                            className="inline-block bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs"
-                            key={a.id}
-                          >
-                            {a.name}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex gap-2 justify-center">
-                        <button
-                          className="text-blue-600 hover:text-blue-900"
-                          onClick={() => openModal(dish)}
-                          title="Modifier"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          onClick={() => openDeleteModal(dish)}
-                          title="Supprimer"
-                        >
-                          <Trash size={18} />
-                        </button>
-                      </div>
-                    </td>
+      {/* Main content */}
+      <main className="container mx-auto p-6">
+        <div className="max-w-5xl mx-auto relative">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              Tableau de bord{restaurantName ? ` (${restaurantName})` : ""}
+            </h1>
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl shadow hover:bg-green-700"
+              onClick={() => openModal()}
+            >
+              <PlusCircle size={20} />
+              Ajouter un plat
+            </button>
+          </div>
+
+          {/* Tableau des plats */}
+          <div className="bg-white rounded-xl shadow p-4 overflow-x-auto">
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="animate-spin text-green-600" size={32} />
+              </div>
+            ) : dishes.length === 0 ? (
+              <div className="text-center text-gray-500 py-12">
+                Aucun plat enregistré.
+              </div>
+            ) : (
+              <table className="min-w-full">
+                <thead>
+                  <tr className="text-sm text-gray-700 border-b">
+                    <th className="py-2">Image</th>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Prix (DH)</th>
+                    <th>Calories</th>
+                    <th>Protéines</th>
+                    <th>Lipides</th>
+                    <th>Glucides</th>
+                    <th>Régimes</th>
+                    <th>Allergies</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {dishes.map((dish) => (
+                    <tr
+                      key={dish.id}
+                      className="border-b text-center text-xs sm:text-sm"
+                    >
+                      <td className="py-1">
+                        {dish.image ? (
+                          <img
+                            src={`${
+                              import.meta.env.VITE_STORAGE_URL || "/storage/"
+                            }${dish.image}`}
+                            alt={dish.name}
+                            className="h-14 w-14 object-cover rounded"
+                          />
+                        ) : (
+                          <ImageIcon
+                            className="mx-auto text-gray-300"
+                            size={28}
+                          />
+                        )}
+                      </td>
+                      <td>{dish.name}</td>
+                      <td>{typeLabels[dish.type] || dish.type}</td>
+                      <td>{dish.price}</td>
+                      <td>{dish.calories}</td>
+                      <td>{dish.proteins}</td>
+                      <td>{dish.lipids}</td>
+                      <td>{dish.carbs}</td>
+                      <td>
+                        <div className="flex flex-col gap-0.5">
+                          {dish.diets.map((d) => (
+                            <span
+                              className="inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs"
+                              key={d.id}
+                            >
+                              {dietLabels[d.name]}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex flex-col gap-0.5">
+                          {dish.allergies.map((a) => (
+                            <span
+                              className="inline-block bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs"
+                              key={a.id}
+                            >
+                              {allergyLabels[a.name]}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            className="text-blue-600 hover:text-blue-900"
+                            onClick={() => openModal(dish)}
+                            title="Modifier"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            className="text-red-600 hover:text-red-900"
+                            onClick={() => openDeleteModal(dish)}
+                            title="Supprimer"
+                          >
+                            <Trash size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* Modale d'ajout/édition */}
       {showModal && (
@@ -608,6 +644,11 @@ const RestaurantDashboard = () => {
         </div>
       )}
 
+      <ChangeRestaurantPasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
+
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
@@ -671,7 +712,7 @@ const RestaurantDashboard = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

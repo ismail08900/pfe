@@ -9,6 +9,7 @@ import {
   Weight,
   Target,
   Salad,
+  X,
 } from "lucide-react";
 import {
   dietLabels,
@@ -330,6 +331,13 @@ export function EditProfileModal({ user, open, onClose, onSaved }) {
         )}
         <div className="flex flex-col md:flex-row gap-4 mt-8 justify-center">
           <button
+            type="button"
+            className="w-full md:w-auto btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-lg font-bold rounded-xl px-8 py-3 shadow"
+            onClick={onClose}
+          >
+            Annuler
+          </button>
+          <button
             type="submit"
             className={`w-full md:w-auto btn text-lg font-bold rounded-xl px-8 py-3 shadow ${
               isModified
@@ -339,13 +347,6 @@ export function EditProfileModal({ user, open, onClose, onSaved }) {
             disabled={loading || !isModified}
           >
             Enregistrer
-          </button>
-          <button
-            type="button"
-            className="w-full md:w-auto btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-lg font-bold rounded-xl px-8 py-3 shadow"
-            onClick={onClose}
-          >
-            Annuler
           </button>
         </div>
       </form>
@@ -476,7 +477,7 @@ export function EditPreferencesModal({
           &times;
         </button>
         <h2 className="text-2xl font-bold mb-6 text-center text-green-700">
-          Modifier mes préférences
+          Modifier mes restrictions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Régime */}
@@ -527,6 +528,13 @@ export function EditPreferencesModal({
         </div>
         <div className="flex flex-col md:flex-row gap-4 mt-8 justify-center">
           <button
+            type="button"
+            className="w-full md:w-auto btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-lg font-bold rounded-xl px-8 py-3 shadow"
+            onClick={onClose}
+          >
+            Annuler
+          </button>
+          <button
             type="submit"
             className={`w-full md:w-auto btn text-lg font-bold rounded-xl px-8 py-3 shadow ${
               isModified
@@ -537,15 +545,330 @@ export function EditPreferencesModal({
           >
             Enregistrer
           </button>
-          <button
-            type="button"
-            className="w-full md:w-auto btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-lg font-bold rounded-xl px-8 py-3 shadow"
-            onClick={onClose}
-          >
-            Annuler
-          </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+export function ChangePasswordModal({ open, onClose, onSaved }) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Valeurs initiales pour la détection de modification
+  const initialValues = React.useRef({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  useEffect(() => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  }, [open]);
+
+  useEffect(() => {
+    initialValues.current = {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    };
+  }, [open]);
+
+  // Vérifier si des modifications ont été apportées
+  const isModified =
+    currentPassword !== initialValues.current.currentPassword ||
+    newPassword !== initialValues.current.newPassword ||
+    confirmPassword !== initialValues.current.confirmPassword;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // Validation côté client
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Tous les champs sont requis");
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error(
+        "Le nouveau mot de passe doit contenir au moins 8 caractères"
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.post("/change-password", {
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: confirmPassword,
+      });
+
+      toast.success("Mot de passe modifié avec succès");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      onClose();
+      if (onSaved) onSaved();
+    } catch (err) {
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else if (err.response?.data?.errors) {
+        const errorMessages = Object.values(err.response.data.errors).flat();
+        toast.error(errorMessages.join(", "));
+      } else {
+        toast.error("Une erreur est survenue");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+      <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
+        <button
+          type="button"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+          onClick={onClose}
+          aria-label="Fermer"
+        >
+          &times;
+        </button>
+        <h2 className="text-2xl font-bold mb-6 text-center text-green-700">
+          Changer mon mot de passe
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Mot de passe actuel
+            </label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full pl-4 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+              placeholder="Entrez votre mot de passe actuel"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Nouveau mot de passe
+            </label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full pl-4 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+              placeholder="Entrez votre nouveau mot de passe"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Confirmer le nouveau mot de passe
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full pl-4 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+              placeholder="Confirmez votre nouveau mot de passe"
+              required
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4 mt-8 justify-center">
+            <button
+              type="button"
+              className="w-full md:w-auto btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-lg font-bold rounded-xl px-8 py-3 shadow"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              className={`w-full md:w-auto btn text-lg font-bold rounded-xl px-8 py-3 shadow ${
+                isModified && !loading
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+              disabled={!isModified || loading}
+            >
+              {loading ? "Modification..." : "Confirmer"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export function DeleteAccountModal({ open, onClose, onSaved }) {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Valeurs initiales pour la détection de modification
+  const initialValues = React.useRef({
+    password: "",
+    confirmPassword: "",
+  });
+
+  useEffect(() => {
+    setPassword("");
+    setConfirmPassword("");
+  }, [open]);
+
+  useEffect(() => {
+    initialValues.current = {
+      password: "",
+      confirmPassword: "",
+    };
+  }, [open]);
+
+  // Vérifier si des modifications ont été apportées
+  const isModified =
+    password !== initialValues.current.password ||
+    confirmPassword !== initialValues.current.confirmPassword;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // Validation côté client
+    if (!password || !confirmPassword) {
+      toast.error("Tous les champs sont requis");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.post("/delete-account", {
+        password: password,
+        password_confirmation: confirmPassword,
+      });
+
+      toast.success("Compte supprimé avec succès");
+      setPassword("");
+      setConfirmPassword("");
+      onClose();
+      if (onSaved) onSaved();
+    } catch (err) {
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else if (err.response?.data?.errors) {
+        const errorMessages = Object.values(err.response.data.errors).flat();
+        toast.error(errorMessages.join(", "));
+      } else {
+        toast.error("Une erreur est survenue");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+      <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
+        <button
+          type="button"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+          onClick={onClose}
+          aria-label="Fermer"
+        >
+          &times;
+        </button>
+        <h2 className="text-2xl font-bold mb-6 text-center text-red-700">
+          Supprimer mon compte
+        </h2>
+
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-700 text-sm">
+            <strong>Attention :</strong> Cette action est irréversible. Toutes
+            vos données seront définitivement supprimées.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pl-4 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600"
+              placeholder="Entrez votre mot de passe"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Confirmer le mot de passe
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full pl-4 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600"
+              placeholder="Confirmez votre mot de passe"
+              required
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4 mt-8 justify-center">
+            <button
+              type="button"
+              className="w-full md:w-auto btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-lg font-bold rounded-xl px-8 py-3 shadow"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              className={`w-full md:w-auto btn text-lg font-bold rounded-xl px-8 py-3 shadow ${
+                isModified && !loading
+                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+              disabled={!isModified || loading}
+            >
+              {loading ? "Suppression..." : "Supprimer"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

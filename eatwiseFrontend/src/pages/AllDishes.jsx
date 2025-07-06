@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 
 const FILTERS_DEFAULT = {
-  min_calories: 0,
-  min_proteins: 0,
-  min_lipids: 0,
-  min_carbs: 0,
-  max_price: 500,
+  min_calories: "",
+  min_proteins: "",
+  min_lipids: "",
+  min_carbs: "",
+  max_price: "",
   type: "",
 };
 
@@ -108,11 +108,11 @@ export default function AllDishes() {
     <div className="bg-gray-50 min-h-screen pt-16">
       <div className="max-w-6xl mx-auto px-4 pb-8">
         <h2 className="text-4xl text-center font-bold text-gray-900 mt-8 mb-2">
-          Plats compatibles avec votre profil
+          Plats des restaurants partenaires
         </h2>
         <p className="text-gray-600 text-center">
-          Affinez votre recherche par ingrédients, cuisine, type de repas,
-          temps, calories, macronutriments.
+          Affinez votre recherche par type de repas, budget, calories,
+          macronutriments.
         </p>
         <div className="flex justify-between mt-8">
           <span className="flex text-md text-red-600">
@@ -137,9 +137,11 @@ export default function AllDishes() {
             className="w-full bg-white rounded-3xl shadow-lg p-8 mb-10 mt-8 flex flex-col gap-8 border border-green-100 animate-fade-in"
             onSubmit={handleApplyFilters}
           >
-            <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-6 mb-4">
+            {/* Ligne 1 : Range sliders */}
+            <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-6">
               <RangeSlider
-                label="Calories min"
+                label="Min calories"
+                color="red-500"
                 min={0}
                 max={1500}
                 value={pendingFilters.min_calories}
@@ -153,7 +155,8 @@ export default function AllDishes() {
                 step={10}
               />
               <RangeSlider
-                label="Protéines min"
+                label="Min proteines"
+                color="green-600"
                 min={0}
                 max={100}
                 value={pendingFilters.min_proteins}
@@ -166,20 +169,8 @@ export default function AllDishes() {
                 unit=" g"
               />
               <RangeSlider
-                label="Lipides min"
-                min={0}
-                max={100}
-                value={pendingFilters.min_lipids}
-                onChange={(e) =>
-                  setPendingFilters((f) => ({
-                    ...f,
-                    min_lipids: Number(e.target.value),
-                  }))
-                }
-                unit=" g"
-              />
-              <RangeSlider
-                label="Glucides min"
+                label="Min glucides"
+                color="orange-500"
                 min={0}
                 max={200}
                 value={pendingFilters.min_carbs}
@@ -187,6 +178,20 @@ export default function AllDishes() {
                   setPendingFilters((f) => ({
                     ...f,
                     min_carbs: Number(e.target.value),
+                  }))
+                }
+                unit=" g"
+              />
+              <RangeSlider
+                label="Min lipides"
+                color="blue-700"
+                min={0}
+                max={100}
+                value={pendingFilters.min_lipids}
+                onChange={(e) =>
+                  setPendingFilters((f) => ({
+                    ...f,
+                    min_lipids: Number(e.target.value),
                   }))
                 }
                 unit=" g"
@@ -205,29 +210,13 @@ export default function AllDishes() {
                 unit=" DH"
               />
             </div>
-            <div className="flex flex-row gap-4 items-center mt-4 w-full">
-              <div className="flex gap-4">
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-200"
-                >
-                  <CheckCheck className="w-5 h-5" />
-                  Appliquer
-                </button>
-                <button
-                  type="button"
-                  className="flex items-center gap-2 bg-white border border-gray-800 text-gray-800 font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-200"
-                  onClick={resetFilters}
-                >
-                  <RotateCcw className="w-5 h-5" />
-                  Réinitialiser
-                </button>
-              </div>
-              <div className="flex-1 flex justify-end">
+            {/* Ligne 2 : Type de repas */}
+            <div className="flex flex-row gap-4 -mt-4 items-center w-full">
+              <div className="flex-1 flex flex-col items-start max-w-xs">
                 <label className="text-gray-700 text-sm font-bold mb-2 tracking-wide block">
                   Type de repas
                 </label>
-                <div className="relative">
+                <div className="relative w-full">
                   <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
                     <CookingPot size={18} />
                   </span>
@@ -249,6 +238,24 @@ export default function AllDishes() {
                   </select>
                 </div>
               </div>
+            </div>
+            {/* Ligne 3 : Boutons */}
+            <div className="flex gap-4 mt-2">
+              <button
+                type="submit"
+                className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-200"
+              >
+                <CheckCheck className="w-5 h-5" />
+                Appliquer
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-2 bg-white border border-gray-800 text-gray-800 font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-200"
+                onClick={resetFilters}
+              >
+                <RotateCcw className="w-5 h-5" />
+                Réinitialiser
+              </button>
             </div>
           </form>
         )}

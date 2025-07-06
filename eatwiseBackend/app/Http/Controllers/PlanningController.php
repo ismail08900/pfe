@@ -69,55 +69,57 @@ class PlanningController extends Controller
         ]);
     }
 
-    public function consumptions()
+    public function consumptions(Request $request)
     {
         $user = Auth::user();
-        $weekStart = now()->startOfWeek(); // ou passé en paramètre
+        $weekStart = $request->input('week_start', now()->startOfWeek(Carbon::MONDAY)->toDateString());
 
         $planning = Planning::where('user_id', $user->id)
             ->where('week_start', $weekStart)
             ->first();
 
-        if (!$planning) {
-            return response()->json(['error' => 'Aucun planning trouvé'], 404);
+        $daysOfWeek = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+        $daysTotals = [];
+        foreach ($daysOfWeek as $day) {
+            $daysTotals[$day] = ['calories' => 0, 'protein' => 0, 'carbs' => 0, 'fat' => 0];
         }
 
-        $planningData = $planning->planning; // array grâce à cast
+        $weekTotals = ['calories' => 0, 'protein' => 0, 'carbs' => 0, 'fat' => 0];
 
-        $daysTotals = [];
-        $weekTotals = [
-            'calories' => 0,
-            'protein'  => 0,
-            'carbs'    => 0,
-            'fat'      => 0,
-        ];
-
-        foreach ($planningData as $day => $meals) {
-            $daysTotals[$day] = [
-                'calories' => 0,
-                'protein'  => 0,
-                'carbs'    => 0,
-                'fat'      => 0,
-                // 'meals'    => $meals, // détails des repas déjà enrichis
-            ];
-            foreach ($meals as $meal) {
-                $daysTotals[$day]['calories'] += $meal['calories'] ?? 0;
-                $daysTotals[$day]['protein']  += $meal['protein'] ?? 0;
-                $daysTotals[$day]['carbs']    += $meal['carbs'] ?? 0;
-                $daysTotals[$day]['fat']      += $meal['fat'] ?? 0;
+        if ($planning) {
+            $planningData = $planning->planning ?? [];
+            foreach ($planningData as $day => $meals) {
+                if (in_array($day, $daysOfWeek) && is_array($meals)) {
+                    foreach ($meals as $meal) {
+                        if (is_array($meal)) {
+                            $daysTotals[$day]['calories'] += $meal['calories'] ?? 0;
+                            $daysTotals[$day]['protein']  += $meal['protein'] ?? 0;
+                            $daysTotals[$day]['carbs']    += $meal['carbs'] ?? 0;
+                            $daysTotals[$day]['fat']      += $meal['fat'] ?? 0;
+                        }
+                    }
+                }
             }
-            // cumule pour la semaine
-            $weekTotals['calories'] += $daysTotals[$day]['calories'];
-            $weekTotals['protein']  += $daysTotals[$day]['protein'];
-            $weekTotals['carbs']    += $daysTotals[$day]['carbs'];
-            $weekTotals['fat']      += $daysTotals[$day]['fat'];
+
+            foreach ($daysTotals as $totals) {
+                $weekTotals['calories'] += $totals['calories'];
+                $weekTotals['protein']  += $totals['protein'];
+                $weekTotals['carbs']    += $totals['carbs'];
+                $weekTotals['fat']      += $totals['fat'];
+            }
         }
 
         return response()->json([
-            'week_start'  => $planning->week_start->toDateString(),
+            'week_start'  => $planning ? $planning->week_start->toDateString() : $weekStart,
             'days'        => $daysTotals,
             'week_totals' => $weekTotals,
         ]);
+    }
+
+    public function weeklyConsumptions(Request $request)
+    {
+        // Alias pour la méthode consumptions pour la compatibilité
+        return $this->consumptions($request);
     }
 
     public function monthlyConsumptions(Request $request)

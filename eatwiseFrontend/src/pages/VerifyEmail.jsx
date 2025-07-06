@@ -85,6 +85,15 @@ export default function VerifyEmail() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4 py-16">
+      <div className="absolute top-6 left-6 z-50">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-gray-900 hover:text-gray-500 font-semibold"
+        >
+          <ArrowLeftCircle size={24} />
+          Accueil
+        </Link>
+      </div>
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border-y-4 border-green-600 flex flex-col items-center">
         <div className="flex flex-col items-center mb-6">
           {/* Icône principale */}

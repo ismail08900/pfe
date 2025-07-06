@@ -217,8 +217,8 @@ export default function AddToPlanningButton({ recipe }) {
             >
               <X size={24} />
             </button>
-            <h3 className="text-lg font-semibold mb-5 text-yellow-800">
-              Ce créneau contient déjà :<br />
+            <h3 className="text-lg font-semibold mb-5 text-gray-900">
+              La cellule sélectionnée contient déjà :<br />
               <b>{currentOccupied?.title}</b>
             </h3>
             <div className="flex gap-3 mt-2">

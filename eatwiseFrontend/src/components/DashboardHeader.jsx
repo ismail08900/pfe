@@ -1,7 +1,5 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Avatar, IconButton } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
 import { useUser } from "../contexts/useUser";
 import { Info } from "lucide-react";
 
@@ -175,7 +173,7 @@ const DashboardHeader = ({ tdee }) => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 mb-5">
         <div>
           <div className="flex items-center flex-wrap space-x-2">
-            <span className="text-2xl font-semibold text-gray-900">
+            <span className="text-2xl font-semibold text-gray-700">
               Bonjour, {displayName}
             </span>
             <span className="hidden md:inline text-gray-400 text-base">|</span>

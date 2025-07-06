@@ -19,8 +19,11 @@ import Dashboard from "./pages/Dashboard";
 import RestaurantRegister from "./pages/RestaurantRegister";
 import RestaurantLogin from "./pages/RestaurantLogin";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
-import PrivateRouter from "./components/PrivaltRouter";
+import PrivateRouter from "./components/PrivateRouter";
+import AdminPrivateRoute from "./components/AdminPrivateRoute";
 import AllDishes from "./pages/AllDishes";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -95,6 +98,15 @@ export default function App() {
             <PrivateRouter>
               <RestaurantDashboard />
             </PrivateRouter>
+          }
+        />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminPrivateRoute>
+              <AdminDashboard />
+            </AdminPrivateRoute>
           }
         />
       </Routes>

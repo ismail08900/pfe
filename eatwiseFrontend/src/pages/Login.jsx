@@ -43,7 +43,10 @@ const Login = () => {
       // Connexion normale
       setToken(res.data.token);
       setUser(res.data.user);
-      navigate("/dashboard");
+      toast.success("Connexion réussie ! Redirection...");
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1200);
     } catch (err) {
       // Gestion du cas où le backend retourne un 403 (email non vérifié)
       if (
@@ -76,7 +79,7 @@ const Login = () => {
           Accueil
         </Link>
       </div>
-      <div className="text-center mb-8">
+      <div className="text-center mb-5">
         <h2 className="text-3xl font-bold text-gray-900">
           Connectez-vous à votre compte
         </h2>

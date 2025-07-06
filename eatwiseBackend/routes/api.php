@@ -15,6 +15,7 @@ use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\AuthRestaurantController;
 use App\Models\Dish;
+use App\Http\Controllers\AdminAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,12 +43,28 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 
 
+
+Route::prefix('admin')->group(function () {
+    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::middleware('auth:sanctum')->post('/logout', [AdminAuthController::class, 'logout']);
+    Route::middleware('auth:sanctum')->get('/me', [AdminAuthController::class, 'me']);
+    // Ajout des routes admin protégées
+    Route::middleware('auth:sanctum')->get('/users', [AdminAuthController::class, 'users']);
+    Route::middleware('auth:sanctum')->delete('/users/{id}', [AdminAuthController::class, 'deleteUser']);
+    Route::middleware('auth:sanctum')->get('/restaurants', [AdminAuthController::class, 'restaurants']);
+    Route::middleware('auth:sanctum')->delete('/restaurants/{id}', [AdminAuthController::class, 'deleteRestaurant']);
+    Route::middleware('auth:sanctum')->get('/stats', [AdminAuthController::class, 'stats']);
+    // Les routes d'administration ici (protégées par auth:sanctum et vérification admin)
+});
+
+
 //
 
 Route::prefix('restaurant')->group(function () {
     Route::post('/register', [AuthRestaurantController::class, 'register']);
     Route::post('/login', [AuthRestaurantController::class, 'login']);
     Route::middleware('auth:sanctum')->post('/logout', [AuthRestaurantController::class, 'logout']);
+    Route::middleware('auth:sanctum')->post('/change-password', [AuthRestaurantController::class, 'changePassword']);
 });
 
 use App\Http\Controllers\RestaurantDishController;
@@ -64,6 +81,8 @@ Route::middleware('auth:sanctum')->prefix('restaurant')->group(function () {
 Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->group(function () {
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
     Route::put('/user/preferences', [UserController::class, 'updatePreferences']);
+    Route::post('/change-password', [UserController::class, 'changePassword']);
+    Route::post('/delete-account', [UserController::class, 'deleteAccount']);
     Route::get('/user', function (Request $request) {
         return $request->user()->load('dietType', 'allergies');
     });
@@ -80,6 +99,7 @@ Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->group(function 
     Route::post('/planning', [PlanningController::class, 'saveCurrentWeekPlanning']);
     Route::get('/user/tdee', [UserController::class, 'tdee']);
     Route::get('/planning/consumptions', [PlanningController::class, 'consumptions']);
+    Route::get('/planning/weekly-consumptions', [PlanningController::class, 'weeklyConsumptions']);
     Route::get('/planning/monthly-consumptions', [PlanningController::class, 'monthlyConsumptions']);
     Route::get('/planning/today', [PlanningController::class, 'getTodayMeals']);
 });

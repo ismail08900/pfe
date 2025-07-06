@@ -10,6 +10,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../api";
 
 const DAYS_ORDER = [
@@ -41,12 +42,28 @@ export default function WeeklyHistoryChart({
   const [loading, setLoading] = useState(true);
   const [animate, setAnimate] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [currentWeek] = useState(() => {
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(
+      now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)
+    );
+    return monday.toISOString().split("T")[0];
+  });
+  const [viewedWeek, setViewedWeek] = useState(() => {
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(
+      now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)
+    );
+    return monday.toISOString().split("T")[0];
+  });
   const chartRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
     api
-      .get("/planning/consumptions")
+      .get(`/planning/weekly-consumptions?week_start=${viewedWeek}`)
       .then((res) => {
         const days = res.data.days || {};
         const daysData = DAYS_ORDER.map(({ key, label }) => {
@@ -60,9 +77,12 @@ export default function WeeklyHistoryChart({
           };
         });
         setData(daysData);
+        setLoading(false);
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => {
+        setLoading(false);
+      });
+  }, [viewedWeek]);
 
   // Intersection Observer pour déclencher l'animation au scroll
   useEffect(() => {
@@ -110,6 +130,32 @@ export default function WeeklyHistoryChart({
     fat: macrosTargets.fat * 7,
   };
 
+  // Navigation semaine précédente/actuelle
+  function handlePrevWeek() {
+    const prevWeek = new Date(viewedWeek);
+    prevWeek.setDate(prevWeek.getDate() - 7);
+    setViewedWeek(prevWeek.toISOString().split("T")[0]);
+  }
+  function handleCurrentWeek() {
+    setViewedWeek(currentWeek);
+  }
+  const isCurrentWeek = viewedWeek === currentWeek;
+
+  // Fonction pour formater la date de la semaine
+  function formatWeekDate(dateString) {
+    const date = new Date(dateString);
+    const endDate = new Date(date);
+    endDate.setDate(date.getDate() + 6);
+
+    const formatDate = (d) => {
+      return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}`;
+    };
+
+    return `${formatDate(date)} - ${formatDate(endDate)}`;
+  }
+
   return (
     <section className="mb-24">
       <h2 className="text-xl font-bold mb-1">Historique hebdomadaire</h2>
@@ -122,7 +168,18 @@ export default function WeeklyHistoryChart({
       </p>
       <div
         ref={chartRef}
-        style={{ width: "100%", maxWidth: 1100, height: 520, margin: "0 auto" }}
+        style={{
+          width: "100%",
+          maxWidth: 1100,
+          height: 520,
+          margin: "0 auto",
+          position: "relative",
+        }}
+      >
+        {/* Header du graphique : boutons Calories/Macros à gauche, date à droite */}
+        <div
+          className="flex items-center justify-between w-full"
+          style={{ position: "relative", zIndex: 2 }}
       >
         <div style={{ marginBottom: 12, display: "flex", gap: 8 }}>
           <button
@@ -153,6 +210,30 @@ export default function WeeklyHistoryChart({
             Macros
           </button>
         </div>
+          <span className="font-semibold text-base flex items-center gap-2 text-gray-700">
+            {formatWeekDate(viewedWeek)}
+          </span>
+        </div>
+        {/* Bouton semaine précédente à gauche, verticalement centré */}
+        {isCurrentWeek && (
+          <button
+            onClick={handlePrevWeek}
+            className="absolute -left-16 top-1/2 -translate-y-1/2 border-2 border-gray-900 text-gray-900 rounded-full p-2 shadow"
+            style={{ zIndex: 2 }}
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+        )}
+        {/* Bouton semaine actuelle à droite, verticalement centré */}
+        {!isCurrentWeek && (
+          <button
+            onClick={handleCurrentWeek}
+            className="absolute -right-16 top-1/2 -translate-y-1/2 border-2 border-gray-900 text-gray-900 rounded-full p-2 shadow"
+            style={{ zIndex: 2 }}
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        )}
         <div
           style={{
             width: "100%",
@@ -286,7 +367,8 @@ export default function WeeklyHistoryChart({
           )}
         </div>
         {/* Totaux hebdomadaires */}
-        {mode === "calories" ? (
+        {!isEmpty &&
+          (mode === "calories" ? (
           <div className="mt-6 flex flex-col md:flex-row gap-4 justify-center items-center text-base">
             <div
               className="bg-orange-50 border border-orange-200 rounded-xl px-6 py-3 flex flex-col items-center min-w-[180px] tooltip"
@@ -354,7 +436,7 @@ export default function WeeklyHistoryChart({
               </span>
             </div>
           </div>
-        )}
+          ))}
       </div>
     </section>
   );

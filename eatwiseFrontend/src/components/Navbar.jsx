@@ -76,6 +76,16 @@ export default function Navbar() {
           <ul className="py-2">
             <li>
               <Link
+                to="/profile"
+                className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                <User size={20} />
+                Mon profil
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/dashboard"
                 className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
                 onClick={() => setMenuOpen(false)}
@@ -94,7 +104,7 @@ export default function Navbar() {
                 Plats compatibles
               </Link>
             </li>
-             <li>
+            <li>
               <Link
                 to="/restaurant-dishes"
                 className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
@@ -112,16 +122,6 @@ export default function Navbar() {
               >
                 <Calendar size={20} />
                 Planning
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/profile"
-                className="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-100 rounded-xl transition"
-                onClick={() => setMenuOpen(false)}
-              >
-                <User size={20} />
-                Profil
               </Link>
             </li>
           </ul>
@@ -172,15 +172,15 @@ export default function Navbar() {
               </svg>
             </button>
             <div className="flex items-center ml-2 md:ml-0">
-              <Utensils className="text-gray-800" />
-              <span className="font-bold text-2xl text-gray-800 ml-2">
+              <Utensils className="text-gray-900" />
+              <span className="font-bold text-2xl text-gray-900 ml-2">
                 EatWise
               </span>
             </div>
           </div>
 
           {/* Menu desktop */}
-          <div className=" hidden md:flex items-center space-x-10">
+          <div className="-ml-16 hidden md:flex items-center space-x-10">
             <Link
               to="/"
               className="text-gray-700 font-semibold text-lg hover:text-green-600 transition-colors"

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Services\NutritionService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -90,5 +91,74 @@ class UserController extends Controller
         );
 
         return response()->json($tdee);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+            'new_password_confirmation' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Vérifier que le mot de passe actuel est correct
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Le mot de passe actuel est incorrect'
+            ], 400);
+        }
+
+        // Vérifier que le nouveau mot de passe est différent de l'actuel
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json([
+                'message' => 'Le nouveau mot de passe doit être différent de l\'actuel'
+            ], 400);
+        }
+
+        // Mettre à jour le mot de passe
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Mot de passe modifié avec succès'
+        ]);
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string',
+            'password_confirmation' => 'required|string|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Vérifier que le mot de passe est correct
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Le mot de passe est incorrect'
+            ], 400);
+        }
+
+        // Supprimer les données associées (optionnel, selon vos besoins)
+        // $user->plannings()->delete(); // Si vous voulez supprimer les plannings
+        // $user->allergies()->detach(); // Détacher les allergies
+
+        // Supprimer l'utilisateur
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Compte supprimé avec succès'
+        ]);
     }
 }

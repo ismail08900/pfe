@@ -75,4 +75,27 @@ class AuthRestaurantController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Déconnexion réussie']);
     }
+
+    public function changePassword(Request $request)
+    {
+        $restaurant = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if (!Hash::check($request->current_password, $restaurant->password)) {
+            return response()->json(['message' => 'Le mot de passe actuel est incorrect.'], 400);
+        }
+
+        $restaurant->password = Hash::make($request->new_password);
+        $restaurant->save();
+
+        return response()->json(['message' => 'Mot de passe modifié avec succès.']);
+    }
 }

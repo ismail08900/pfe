@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { HelpCircle } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import foodDatabase from "../utils/foodDatabase";
 
 const DAYS = [
   "lundi",
@@ -35,6 +36,17 @@ export default function Planning() {
     meal: null,
     title: "",
   });
+
+  // Ajout pour repas personnalisé
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customDay, setCustomDay] = useState("");
+  const [customMeal, setCustomMeal] = useState("");
+  const [search, setSearch] = useState("");
+  const [selectedFoods, setSelectedFoods] = useState([]); // [{food, qty}]
+
+  // Ajoute un état pour le modal de confirmation d'écrasement
+  const [showOverwriteModal, setShowOverwriteModal] = useState(false);
+  const [pendingCustomRecipe, setPendingCustomRecipe] = useState(null);
 
   const navigate = useNavigate();
 
@@ -102,6 +114,88 @@ export default function Planning() {
       });
   }
 
+  // Ajoute un aliment sélectionné
+  function handleAddFood(food) {
+    if (selectedFoods.find((f) => f.food.name === food.name)) return;
+    setSelectedFoods([...selectedFoods, { food, qty: 100 }]);
+  }
+
+  // Modifie la quantité
+  function handleQtyChange(idx, qty) {
+    setSelectedFoods(
+      selectedFoods.map((f, i) => (i === idx ? { ...f, qty: Number(qty) } : f))
+    );
+  }
+
+  // Supprime un aliment
+  function handleRemoveFood(idx) {
+    setSelectedFoods(selectedFoods.filter((_, i) => i !== idx));
+  }
+
+  // Calcule les totaux
+  function getTotals() {
+    return selectedFoods.reduce(
+      (acc, { food, qty }) => {
+        acc.calories += food.calories * qty;
+        acc.protein += food.protein * qty;
+        acc.carbs += food.carbs * qty;
+        acc.fat += food.fat * qty;
+        return acc;
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  }
+
+  // Validation du repas personnalisé
+  function handleSaveCustomMeal() {
+    if (!customDay || !customMeal || selectedFoods.length === 0) return;
+    const total = getTotals();
+    const customRecipe = {
+      title: "repas personnalisé",
+      image:
+        "https://t3.ftcdn.net/jpg/11/97/54/24/360_F_1197542478_QryfuMhhMBfFpv1XZoX7CgG0GDqA7WAy.jpg",
+      calories: Math.round(total.calories),
+      protein: Math.round(total.protein * 10) / 10,
+      carbs: Math.round(total.carbs * 10) / 10,
+      fat: Math.round(total.fat * 10) / 10,
+    };
+    // Vérifie si la cellule est déjà occupée
+    if (planning[customDay][customMeal]) {
+      setPendingCustomRecipe(customRecipe);
+      setShowOverwriteModal(true);
+      return;
+    }
+    // Sinon, ajoute directement
+    saveCustomRecipe(customRecipe);
+  }
+
+  // Fonction pour sauvegarder le repas personnalisé (utilisée aussi par la confirmation)
+  function saveCustomRecipe(customRecipe) {
+    const updatedPlanning = {
+      ...planning,
+      [customDay]: {
+        ...planning[customDay],
+        [customMeal]: customRecipe,
+      },
+    };
+    setPlanning(updatedPlanning);
+    setShowCustomModal(false);
+    setShowOverwriteModal(false);
+    setPendingCustomRecipe(null);
+    // Sauvegarde immédiate
+    api
+      .post("/planning", {
+        week_start: weekStart,
+        planning: updatedPlanning,
+      })
+      .then(() => {
+        toast.success("Repas personnalisé ajouté !");
+      })
+      .catch(() => {
+        toast.error("Erreur lors de l'ajout du repas personnalisé.");
+      });
+  }
+
   return (
     <div className="bg-gray-50 min-h-screen pb-20 pt-16 px-2">
       <ToastContainer
@@ -131,7 +225,7 @@ export default function Planning() {
                 />
               </svg>
             </button>
-            <h3 className="text-lg font-semibold mb-5 text-red-800">
+            <h3 className="text-lg font-semibold mb-5 text-gray-900">
               Supprimer la recette&nbsp;
               <span className="font-bold">{deleteTarget.title}</span> ?
             </h3>
@@ -145,6 +239,174 @@ export default function Planning() {
               <button
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg"
                 onClick={handleConfirmRemove}
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCustomModal && (
+        <>
+          <style>{`body { overflow: hidden !important; }`}</style>
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+            <div className="bg-white rounded-2xl shadow-lg p-7 w-[420px] relative">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-800 text-2xl"
+                onClick={() => {
+                  setShowCustomModal(false);
+                  document.body.style.overflow = "";
+                }}
+              >
+                &times;
+              </button>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                Créer un repas personnalisé
+              </h3>
+              <div className="flex gap-2 mb-3">
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold mb-1">
+                    Jour
+                  </label>
+                  <select
+                    className="w-full border rounded-lg px-2 py-1"
+                    value={customDay}
+                    onChange={(e) => setCustomDay(e.target.value)}
+                  >
+                    {DAYS.map((day) => (
+                      <option key={day} value={day}>
+                        {day.charAt(0).toUpperCase() + day.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold mb-1">
+                    Type de repas
+                  </label>
+                  <select
+                    className="w-full border rounded-lg px-2 py-1"
+                    value={customMeal}
+                    onChange={(e) => setCustomMeal(e.target.value)}
+                  >
+                    {MEALS.map((meal) => (
+                      <option key={meal.key} value={meal.key}>
+                        {meal.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <input
+                type="text"
+                className="w-full border rounded-lg px-3 py-2 mb-3"
+                placeholder="Rechercher un aliment..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <div className="max-h-32 overflow-y-auto mb-3">
+                {foodDatabase
+                  .filter((f) =>
+                    f.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((food) => (
+                    <button
+                      key={food.name}
+                      className="block w-full text-left px-2 py-1 hover:bg-green-100 rounded text-sm"
+                      onClick={() => handleAddFood(food)}
+                      type="button"
+                    >
+                      {food.name}{" "}
+                      <span className="text-gray-400">
+                        ({food.calories} kcal/{food.unit})
+                      </span>
+                    </button>
+                  ))}
+              </div>
+              <div className="mb-3">
+                {selectedFoods.length === 0 ? (
+                  <div className="text-gray-400 text-sm italic">
+                    Aucun aliment sélectionné
+                  </div>
+                ) : (
+                  <ul>
+                    {selectedFoods.map((f, idx) => (
+                      <li
+                        key={f.food.name}
+                        className="flex items-center gap-2 mb-1"
+                      >
+                        <span className="flex-1">{f.food.name}</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={f.qty}
+                          onChange={(e) => handleQtyChange(idx, e.target.value)}
+                          className="w-16 border rounded px-1 py-0.5 text-sm"
+                        />
+                        <span className="text-xs text-gray-500">{f.food.unit}</span>
+                        <button
+                          className="text-red-500 text-xs ml-2"
+                          onClick={() => handleRemoveFood(idx)}
+                          type="button"
+                        >
+                          Retirer
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="mb-4 text-sm bg-green-50 rounded p-2">
+                <b>Total :</b> {getTotals().calories.toFixed(0)} kcal,{" "}
+                {getTotals().protein.toFixed(1)}g prot,{" "}
+                {getTotals().carbs.toFixed(1)}g gluc,{" "}
+                {getTotals().fat.toFixed(1)}g lip
+              </div>
+              <button
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition"
+                onClick={handleSaveCustomMeal}
+                disabled={selectedFoods.length === 0}
+              >
+                Ajouter au planning
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showOverwriteModal && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-lg p-7 w-[380px] relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-800 text-2xl"
+              onClick={() => {
+                setShowOverwriteModal(false);
+                setPendingCustomRecipe(null);
+              }}
+            >
+              &times;
+            </button>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              Modification du repas
+            </h3>
+            <p className="mb-6 text-gray-700">
+              La cellule sélectionnée contient déjà un repas. Voulez-vous le
+              remplacer par votre repas personnalisé ?
+            </p>
+            <div className="flex gap-4 justify-end">
+              <button
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg"
+                onClick={() => {
+                  setShowOverwriteModal(false);
+                  setPendingCustomRecipe(null);
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-2 px-4 rounded-lg"
+                onClick={() => saveCustomRecipe(pendingCustomRecipe)}
               >
                 Confirmer
               </button>
@@ -216,7 +478,7 @@ export default function Planning() {
             )}
           </div>
           <h2 className="text-4xl font-bold ml-8 text-center text-gray-900">
-            Mon planning de la semaine
+            Planning de la semaine
           </h2>
           <div className="w-[100px]"></div> {/* Spacer pour centrer le titre */}
         </div>
@@ -224,6 +486,20 @@ export default function Planning() {
           Planifiez vos repas pour la semaine ! Pour ajouter une recette,
           utilisez le bouton sur la page de détails de la recette.
         </p>
+        <div className="mb-2 flex justify-start">
+          <button
+            className="btn text-gray-900 font-semibold py-2 px-6 rounded-xl border-2 border-gray-900 text-md"
+            onClick={() => {
+              setCustomDay(DAYS[0]);
+              setCustomMeal(MEALS[0].key);
+              setShowCustomModal(true);
+              setSearch("");
+              setSelectedFoods([]);
+            }}
+          >
+            Ajouter un repas personnalisé
+          </button>
+        </div>
         <div className="overflow-x-auto">
           {loading ? (
             <div className="text-center font-bold text-lg mt-20">
@@ -290,8 +566,10 @@ export default function Planning() {
                               </button>
                             </div>
                           ) : (
-                            <div className="text-gray-500 text-center text-xs italic">
-                              Vide
+                            <div className="flex flex-col items-center justify-center min-h-[70px]">
+                              <div className="text-gray-500 text-center text-xs italic">
+                                Vide
+                              </div>
                             </div>
                           )}
                         </td>

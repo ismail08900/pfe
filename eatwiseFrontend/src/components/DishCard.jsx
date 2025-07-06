@@ -11,7 +11,6 @@ import {
 import { Link } from "react-router-dom";
 
 export default function DishCard({ dish }) {
-
   const mapsUrl = dish.restaurant?.location
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
         dish.restaurant.location
@@ -51,7 +50,7 @@ export default function DishCard({ dish }) {
           ))}
           {dish.allergies.map((a) => (
             <span
-             className="bg-gray-100 rounded-lg px-2 py-0.5 text-xs font-semibold text-gray-700 capitalize"
+              className="bg-gray-100 rounded-lg px-2 py-0.5 text-xs font-semibold text-gray-700 capitalize"
               key={a.id}
             >
               {allergyLabels[a.name] || a.name}
@@ -63,42 +62,44 @@ export default function DishCard({ dish }) {
             <Flame className="w-4 h-4 text-red-500" /> {dish.calories} kcal
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center text-xs mb-2">
-          <div>
-            <div className="font-bold text-green-600 text-base">
-              {dish.proteins}g
+        <div className="mt-auto flex flex-col gap-2">
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div>
+              <div className="font-bold text-green-600 text-base">
+                {dish.proteins}g
+              </div>
+              <div className="text-gray-500">Protéines</div>
             </div>
-            <div className="text-gray-500">Protéines</div>
-          </div>
-          <div>
-            <div className="font-bold text-orange-500 text-base">
-              {dish.carbs}g
+            <div>
+              <div className="font-bold text-orange-500 text-base">
+                {dish.carbs}g
+              </div>
+              <div className="text-gray-500">Glucides</div>
             </div>
-            <div className="text-gray-500">Glucides</div>
-          </div>
-          <div>
-            <div className="font-bold text-blue-700 text-base">
-              {dish.lipids}g
+            <div>
+              <div className="font-bold text-blue-700 text-base">
+                {dish.lipids}g
+              </div>
+              <div className="text-gray-500">Lipides</div>
             </div>
-            <div className="text-gray-500">Lipides</div>
           </div>
-        </div>
-        <div className="flex items-center justify-between mt-auto">
-          <span className="text-green-700 font-bold text-lg">
-            {dish.price} DH
-          </span>
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow transition"
-            title="Commander (voir l'adresse sur Google Maps)"
-          >
-            <ShoppingCart size={16} /> Commander
-          </a>
-        </div>
-        <div className="mt-3 text-xs text-gray-400">
-          Restaurant : {dish.restaurant?.name || "-"}
+          <div className="flex items-center justify-between">
+            <span className="text-green-700 font-bold text-lg">
+              {dish.price} DH
+            </span>
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow transition"
+              title="Commander (voir l'adresse sur Google Maps)"
+            >
+              <ShoppingCart size={16} /> Commander
+            </a>
+          </div>
+          <div className="text-xs text-gray-400">
+            Restaurant : {dish.restaurant?.name || "-"}
+          </div>
         </div>
       </div>
     </div>
