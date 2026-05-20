@@ -102,6 +102,12 @@ Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->group(function 
     Route::get('/planning/weekly-consumptions', [PlanningController::class, 'weeklyConsumptions']);
     Route::get('/planning/monthly-consumptions', [PlanningController::class, 'monthlyConsumptions']);
     Route::get('/planning/today', [PlanningController::class, 'getTodayMeals']);
+    
+    // AI and WhatsApp Routes
+    Route::post('/ai/chat', [App\Http\Controllers\AIController::class, 'chat']);
+    Route::post('/ai/generate-recipe', [App\Http\Controllers\AIController::class, 'generateRecipe']);
+    Route::post('/ai/generate-planning', [App\Http\Controllers\AIController::class, 'generatePlanning']);
+    Route::post('/planning/send-whatsapp', [App\Http\Controllers\AIController::class, 'sendPlanningWhatsApp']);
 });
 
 

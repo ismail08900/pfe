@@ -1,4 +1,4 @@
-import { CookingPot, Utensils } from "lucide-react";
+import {Utensils} from "lucide-react";
 
 export default function Footer() {
   return (
@@ -111,7 +111,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row md:justify-between">
           <p className="text-gray-600 text-sm">
-            &copy; 2025 EatWise. Tous droits réservés.
+            &copy; 2026 EatWise. Tous droits réservés.
           </p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <a href="#" className="text-gray-600 hover:text-green-600">

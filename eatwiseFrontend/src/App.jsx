@@ -24,6 +24,8 @@ import AdminPrivateRoute from "./components/AdminPrivateRoute";
 import AllDishes from "./pages/AllDishes";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AIChatbot from "./components/AIChatbot";
+import CustomRecipe from "./pages/CustomRecipe";
 
 export default function App() {
   return (
@@ -90,6 +92,7 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/email-verified" element={<EmailVerified />} />
         <Route path="/recette/:id" element={<RecipeDetails />} />
+        <Route path="/repas-personnalise/:id" element={<CustomRecipe />} />
         <Route path="/restaurant/register" element={<RestaurantRegister />} />
         <Route path="/restaurant/login" element={<RestaurantLogin />} />
         <Route
@@ -110,6 +113,7 @@ export default function App() {
           }
         />
       </Routes>
+      <AIChatbot />
     </div>
   );
 }

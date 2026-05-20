@@ -245,7 +245,7 @@ export default function Register() {
               </span>
               <input
                 name="password"
-                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$"
+                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"
                 type={showPassword ? "text" : "password"}
                 placeholder="Mot de passe"
                 onChange={handleChange}

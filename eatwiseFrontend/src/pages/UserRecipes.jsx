@@ -584,11 +584,35 @@ export default function UserRecipes() {
   const [includeGroup, setIncludeGroup] = useState(null);
   const [excludeGroup, setExcludeGroup] = useState(null);
   const [showSliders, setShowSliders] = useState(false);
+  const [loadingAI, setLoadingAI] = useState(false);
 
   useEffect(() => {
     fetchRecipes();
     // eslint-disable-next-line
   }, []);
+
+  async function generateAIRecipe() {
+    setLoadingAI(true);
+    try {
+      const ingredientsList = filters.includeIngredients
+        ? filters.includeIngredients.split(",").map((i) => i.trim())
+        : ["ingrédients surprises"];
+      
+      const response = await api.post("/ai/generate-recipe", {
+        ingredients: ingredientsList,
+      });
+
+      if (response.data && response.data.results) {
+        // Ajouter la recette générée au début de la liste
+        setRecipes((prev) => [...response.data.results, ...prev]);
+      }
+    } catch (error) {
+      console.error("Erreur de génération IA :", error);
+      alert("Erreur lors de la génération de la recette avec l'IA.");
+    } finally {
+      setLoadingAI(false);
+    }
+  }
 
   function fetchRecipes(customFilters = null) {
     setLoading(true);
@@ -691,17 +715,31 @@ export default function UserRecipes() {
             <RotateCcw className="w-5 h-5" />
             Actualiser
           </button> */}
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-300"
-          >
-            {showFilters ? (
-              <FunnelX className="w-5 h-5" />
-            ) : (
-              <Filter className="w-5 h-5" />
-            )}
-            {showFilters ? "Masquer" : "Filtrer"}
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={generateAIRecipe}
+              disabled={loadingAI}
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-300"
+            >
+              {loadingAI ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                <span className="text-xl">✨</span>
+              )}
+              Générer avec l'IA
+            </button>
+            <button
+              onClick={() => setShowFilters((v) => !v)}
+              className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-300"
+            >
+              {showFilters ? (
+                <FunnelX className="w-5 h-5" />
+              ) : (
+                <Filter className="w-5 h-5" />
+              )}
+              {showFilters ? "Masquer" : "Filtrer"}
+            </button>
+          </div>
         </div>
         <FilterBar
           filters={filters}

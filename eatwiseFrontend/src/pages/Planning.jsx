@@ -158,6 +158,8 @@ export default function Planning() {
       protein: Math.round(total.protein * 10) / 10,
       carbs: Math.round(total.carbs * 10) / 10,
       fat: Math.round(total.fat * 10) / 10,
+      id: "custom_" + Date.now(),
+      ingredients: selectedFoods,
     };
     // Vérifie si la cellule est déjà occupée
     if (planning[customDay][customMeal]) {
@@ -195,6 +197,86 @@ export default function Planning() {
         toast.error("Erreur lors de l'ajout du repas personnalisé.");
       });
   }
+
+  // --- AI AND WHATSAPP FUNCTIONS ---
+
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
+
+  async function generateAIPlanning() {
+    setLoadingAI(true);
+    try {
+      const response = await api.post("/ai/generate-planning", {
+        current_planning: planning
+      });
+      if (response.data && response.data.week) {
+        // Le format de retour de l'IA doit correspondre au state planning
+        // (qui attend un objet avec les jours contenant les repas)
+        // Mais nous devons l'adapter si nécessaire
+        
+        // Supposons que l'IA renvoie { week: { lundi: { meals: [...] }, ... } }
+        // On transforme pour le format: { lundi: { breakfast: {}, lunch: {}, dinner: {}, snack: {} }, ... }
+        const newPlanning = { ...planning };
+        
+        DAYS.forEach((day) => {
+          if (!newPlanning[day]) newPlanning[day] = {};
+          const aiMeals = response.data.week[day]?.meals || [];
+          
+          if (aiMeals.length > 0) newPlanning[day].breakfast = aiMeals[0];
+          if (aiMeals.length > 1) newPlanning[day].lunch = aiMeals[1];
+          if (aiMeals.length > 2) newPlanning[day].dinner = aiMeals[2];
+          if (aiMeals.length > 3) newPlanning[day].snack = aiMeals[3];
+        });
+
+        setPlanning(newPlanning);
+        
+        // Sauvegarde du nouveau planning en DB
+        await api.post("/planning", {
+          week_start: weekStart,
+          planning: newPlanning,
+        });
+
+        toast.success("Planning généré par l'IA avec succès !");
+      }
+    } catch (error) {
+      console.error("Erreur IA planning :", error);
+      toast.error("Erreur lors de la génération du planning par l'IA.");
+    } finally {
+      setLoadingAI(false);
+    }
+  }
+
+  function sendToWhatsApp() {
+    let text = "🍽️ *Mon Planning Repas EatWise* 🍽️\n\n";
+
+    let hasMeals = false;
+    DAYS.forEach(day => {
+      let dayText = `*${day.toUpperCase()}*\n`;
+      let dayHasMeals = false;
+      MEALS.forEach(meal => {
+        if(planning[day] && planning[day][meal.key]) {
+          dayHasMeals = true;
+          hasMeals = true;
+          dayText += `• _${meal.label}_: ${planning[day][meal.key].title}\n`;
+        }
+      });
+      if (dayHasMeals) {
+        text += dayText + "\n";
+      }
+    });
+
+    if (!hasMeals) {
+      toast.warning("Votre planning est vide !");
+      return;
+    }
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  }
+
+  // --------------------------------
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20 pt-16 px-2">
@@ -243,6 +325,41 @@ export default function Planning() {
                 Confirmer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal WhatsApp Phone */}
+      {showPhoneModal && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-lg p-7 w-[380px] relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-800 text-2xl"
+              onClick={() => setShowPhoneModal(false)}
+            >
+              &times;
+            </button>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 flex items-center gap-2">
+              <span className="text-[#25D366] text-2xl">📱</span> Numéro WhatsApp
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Veuillez entrer votre numéro de téléphone (avec le code pays, ex: +33612345678) pour recevoir votre planning.
+            </p>
+            <input
+              type="text"
+              className="w-full border rounded-lg px-3 py-2 mb-4"
+              placeholder="+33 6 12 34 56 78"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+            />
+            <button
+              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2 rounded-lg transition flex justify-center items-center gap-2"
+              onClick={sendToWhatsApp}
+              disabled={sendingWhatsApp || !phoneNumber}
+            >
+              {sendingWhatsApp ? <span className="loading loading-spinner loading-sm"></span> : null}
+              Envoyer sur WhatsApp
+            </button>
           </div>
         </div>
       )}
@@ -486,7 +603,7 @@ export default function Planning() {
           Planifiez vos repas pour la semaine ! Pour ajouter une recette,
           utilisez le bouton sur la page de détails de la recette.
         </p>
-        <div className="mb-2 flex justify-start">
+        <div className="mb-4 flex flex-wrap gap-4 justify-start items-center">
           <button
             className="btn text-gray-900 font-semibold py-2 px-6 rounded-xl border-2 border-gray-900 text-md"
             onClick={() => {
@@ -498,6 +615,22 @@ export default function Planning() {
             }}
           >
             Ajouter un repas personnalisé
+          </button>
+          
+          <button
+            onClick={generateAIPlanning}
+            disabled={loadingAI}
+            className="btn flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold py-2 px-6 rounded-xl border-none shadow-md"
+          >
+            {loadingAI ? <span className="loading loading-spinner loading-sm"></span> : <span className="text-xl">✨</span>}
+            Générer avec l'IA
+          </button>
+
+          <button
+            onClick={sendToWhatsApp}
+            className="btn flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold py-2 px-6 rounded-xl border-none shadow-md ml-auto"
+          >
+            <span className="text-xl">📱</span> Envoyer sur WhatsApp
           </button>
         </div>
         <div className="overflow-x-auto">
@@ -528,7 +661,7 @@ export default function Planning() {
                       {meal.label}
                     </td>
                     {DAYS.map((day) => {
-                      const recipe = planning[day][meal.key];
+                      const recipe = planning && planning[day] ? planning[day][meal.key] : null;
                       return (
                         <td
                           key={day + meal.key}
@@ -549,9 +682,14 @@ export default function Planning() {
                               >
                                 <button
                                   className="text-sm font-bold text-green-800 text-center mb-1 hover:underline"
-                                  onClick={() =>
-                                    navigate(`/recette/${recipe.id}`)
-                                  }
+                                  onClick={() => {
+                                    if ((recipe.id && (recipe.id.toString().startsWith("custom_") || recipe.id.toString().startsWith("ai_"))) || recipe.title === "repas personnalisé") {
+                                      const customId = recipe.id || "custom_old";
+                                      navigate(`/repas-personnalise/${customId}`, { state: { recipe } });
+                                    } else {
+                                      navigate(`/recette/${recipe.id}`);
+                                    }
+                                  }}
                                 >
                                   {recipe.title}
                                 </button>
