@@ -211,50 +211,39 @@ Ne mets rien d'autre après ce bloc JSON.";
 
     protected function callGemini(array $contents): string
     {
+        // Try each model once with a short timeout to stay within Railway's 60s gateway limit
+        // Budget: ~20s per model attempt, max 2 models = 40s for Gemini
         $models = [
-            'gemini-3.5-flash',
             'gemini-2.0-flash',
+            'gemini-2.0-flash-lite',
         ];
 
         foreach ($models as $model) {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $this->apiKey;
 
-            for ($attempt = 1; $attempt <= 2; $attempt++) {
-                try {
-                    $response = Http::timeout(30)->post($url, [
-                        'contents' => $contents,
-                        'generationConfig' => [
-                            'temperature' => 0.7,
-                        ]
-                    ]);
+            try {
+                $response = Http::timeout(20)->post($url, [
+                    'contents' => $contents,
+                    'generationConfig' => [
+                        'temperature' => 0.7,
+                    ]
+                ]);
 
-                    if ($response->successful()) {
-                        return $response->json('candidates.0.content.parts.0.text');
-                    }
-
-                    // Retry on rate limit or temporary unavailability
-                    if (in_array($response->status(), [429, 503]) && $attempt === 1) {
-                        Log::warning("Gemini {$model} returned {$response->status()}, retrying in 2s...");
-                        sleep(2);
-                        continue;
-                    }
-
-                    // If still failing after retry, try next model
-                    if (in_array($response->status(), [429, 503])) {
-                        Log::warning("Gemini {$model} still unavailable after retry, trying next model...");
-                        break;
-                    }
-
-                    Log::error("Erreur API Gemini ({$model})", ['response' => $response->body()]);
-                    return "Désolé, je rencontre une erreur de connexion à l'intelligence artificielle.";
-                } catch (\Exception $e) {
-                    Log::error("Exception API Gemini ({$model}): " . $e->getMessage());
-                    if ($attempt === 1) {
-                        sleep(1);
-                        continue;
-                    }
-                    break;
+                if ($response->successful()) {
+                    return $response->json('candidates.0.content.parts.0.text');
                 }
+
+                // On 429/503, skip to next model immediately
+                if (in_array($response->status(), [429, 503])) {
+                    Log::warning("Gemini {$model} returned {$response->status()}, trying next model...");
+                    continue;
+                }
+
+                Log::error("Erreur API Gemini ({$model})", ['response' => $response->body()]);
+                return "Désolé, je rencontre une erreur de connexion à l'intelligence artificielle.";
+            } catch (\Exception $e) {
+                Log::error("Exception API Gemini ({$model}): " . $e->getMessage());
+                continue;
             }
         }
 
