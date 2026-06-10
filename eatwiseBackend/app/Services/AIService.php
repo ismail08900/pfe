@@ -203,7 +203,7 @@ Ne mets rien d'autre après ce bloc JSON.";
         $decoded = json_decode($responseJsonString, true);
         if (!$decoded) {
             Log::error("Erreur JSON Gemini Planning : " . $responseJsonString);
-            return ['error' => 'Erreur lors de la génération du planning'];
+            return ['error' => 'Erreur JSON ou IA : ' . substr($responseJsonString, 0, 200)];
         }
 
         return $decoded;
@@ -221,7 +221,7 @@ Ne mets rien d'autre après ce bloc JSON.";
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $this->apiKey;
 
             try {
-                $response = Http::timeout(20)->post($url, [
+                $response = Http::timeout(45)->post($url, [
                     'contents' => $contents,
                     'generationConfig' => [
                         'temperature' => 0.7,
@@ -239,13 +239,13 @@ Ne mets rien d'autre après ce bloc JSON.";
                 }
 
                 Log::error("Erreur API Gemini ({$model})", ['response' => $response->body()]);
-                return "Désolé, je rencontre une erreur de connexion à l'intelligence artificielle.";
+                return "Erreur API Gemini ({$model}): " . $response->status() . " - " . $response->body();
             } catch (\Exception $e) {
                 Log::error("Exception API Gemini ({$model}): " . $e->getMessage());
-                continue;
+                return "Exception API Gemini: " . $e->getMessage();
             }
         }
 
-        return "Désolé, l'intelligence artificielle est temporairement indisponible. Veuillez réessayer dans quelques instants.";
+        return "Erreur inconnue dans callGemini";
     }
 }
