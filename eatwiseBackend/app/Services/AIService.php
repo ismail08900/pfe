@@ -211,27 +211,53 @@ Ne mets rien d'autre après ce bloc JSON.";
 
     protected function callGemini(array $contents): string
     {
-        try {
-            $response = Http::timeout(30)->post($this->baseUrl . '?key=' . $this->apiKey, [
-                'contents' => $contents,
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                ]
-            ]);
+        $models = [
+            'gemini-3.5-flash',
+            'gemini-2.0-flash',
+        ];
 
-            if ($response->successful()) {
-                return $response->json('candidates.0.content.parts.0.text');
+        foreach ($models as $model) {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $this->apiKey;
+
+            for ($attempt = 1; $attempt <= 2; $attempt++) {
+                try {
+                    $response = Http::timeout(30)->post($url, [
+                        'contents' => $contents,
+                        'generationConfig' => [
+                            'temperature' => 0.7,
+                        ]
+                    ]);
+
+                    if ($response->successful()) {
+                        return $response->json('candidates.0.content.parts.0.text');
+                    }
+
+                    // Retry on rate limit or temporary unavailability
+                    if (in_array($response->status(), [429, 503]) && $attempt === 1) {
+                        Log::warning("Gemini {$model} returned {$response->status()}, retrying in 2s...");
+                        sleep(2);
+                        continue;
+                    }
+
+                    // If still failing after retry, try next model
+                    if (in_array($response->status(), [429, 503])) {
+                        Log::warning("Gemini {$model} still unavailable after retry, trying next model...");
+                        break;
+                    }
+
+                    Log::error("Erreur API Gemini ({$model})", ['response' => $response->body()]);
+                    return "Désolé, je rencontre une erreur de connexion à l'intelligence artificielle.";
+                } catch (\Exception $e) {
+                    Log::error("Exception API Gemini ({$model}): " . $e->getMessage());
+                    if ($attempt === 1) {
+                        sleep(1);
+                        continue;
+                    }
+                    break;
+                }
             }
-
-            if ($response->status() === 429) {
-                return "Je reçois un peu trop de messages en ce moment. Veuillez patienter une petite minute avant de me reparler !";
-            }
-
-            Log::error("Erreur API Gemini", ['response' => $response->body()]);
-            return "Désolé, je rencontre une erreur de connexion à l'intelligence artificielle.";
-        } catch (\Exception $e) {
-            Log::error("Exception API Gemini: " . $e->getMessage());
-            return "Désolé, je rencontre une erreur de connexion à l'intelligence artificielle.";
         }
+
+        return "Désolé, l'intelligence artificielle est temporairement indisponible. Veuillez réessayer dans quelques instants.";
     }
 }
