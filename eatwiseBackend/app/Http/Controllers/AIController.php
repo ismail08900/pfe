@@ -17,6 +17,49 @@ class AIController extends Controller
         $this->whatsappService = $whatsappService;
     }
 
+    public function testGemini(Request $request)
+    {
+        $recipe = $this->aiService->generateRecipe(["tomates"], "", "");
+        return response()->json(['result' => $recipe]);
+    }
+
+    public function testGeminiPlanning(Request $request)
+    {
+        $userProfile = [
+            'goal' => 'Manger équilibré',
+            'diet' => 'Standard',
+            'allergies' => 'Aucune',
+            'activityLevel' => 'Sédentaire'
+        ];
+
+        $params = [
+            'apiKey' => env('SPOONACULAR_API_KEY'),
+            'number' => 5,
+            'addRecipeNutrition' => 'true',
+            'type' => 'main course,breakfast,snack',
+        ];
+
+        $response = \Illuminate\Support\Facades\Http::get('https://api.spoonacular.com/recipes/complexSearch', $params);
+        $siteRecipes = [];
+        if ($response->successful()) {
+            $recipes = $response->json()['results'] ?? [];
+            foreach ($recipes as $r) {
+                $siteRecipes[] = [
+                    'id' => $r['id'],
+                    'title' => $r['title'],
+                    'image' => $r['image'] ?? '',
+                    'readyInMinutes' => $r['readyInMinutes'] ?? 30,
+                    'calories' => collect($r['nutrition']['nutrients'] ?? [])->firstWhere('name', 'Calories')['amount'] ?? 0
+                ];
+            }
+        } else {
+            return response()->json(['error' => 'Spoonacular failed', 'status' => $response->status(), 'body' => $response->body()], 500);
+        }
+
+        $planning = $this->aiService->generateMealPlan($userProfile, [], $siteRecipes);
+        return response()->json(['result' => $planning]);
+    }
+
     public function chat(Request $request)
     {
         $request->validate([
@@ -36,85 +79,128 @@ class AIController extends Controller
 
     public function generateRecipe(Request $request)
     {
-        $request->validate([
-            'ingredients' => 'required|array',
-            'diet' => 'nullable|string',
-            'allergies' => 'nullable|string'
-        ]);
+        try {
+            $request->validate([
+                'ingredients' => 'required|array',
+                'diet' => 'nullable|string',
+                'allergies' => 'nullable|string',
+            ]);
 
-        $ingredients = $request->input('ingredients');
-        $diet = $request->input('diet', '');
-        $allergies = $request->input('allergies', '');
+            $ingredients = $request->input('ingredients');
+            $diet = $request->input('diet', '');
+            $allergies = $request->input('allergies', '');
 
-        $recipe = $this->aiService->generateRecipe($ingredients, $diet, $allergies);
+            $recipe = $this->aiService->generateRecipe($ingredients, $diet, $allergies);
 
-        if (isset($recipe['error'])) {
-            return response()->json($recipe, 500);
+            if (isset($recipe['error'])) {
+                return response()->json(['error' => $recipe['error'], 'raw' => $recipe['raw'] ?? ''], 500);
+            }
+
+            return response()->json([
+                'results' => [$recipe] // Format similaire à Spoonacular pour faciliter l'intégration côté front
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'results' => [$recipe] // Format similaire à Spoonacular pour faciliter l'intégration côté front
-        ]);
     }
 
     public function generatePlanning(Request $request)
     {
-        $user = $request->user();
-        if (!$user) {
-            // Pour les tests sans auth si besoin, ou utiliser un mock
-            $userProfile = [
-                'goal' => $request->input('goal', 'Manger équilibré'),
-                'diet' => $request->input('diet', 'Standard'),
-                'allergies' => $request->input('allergies', 'Aucune'),
-                'activityLevel' => $request->input('activityLevel', 'Sédentaire')
-            ];
-        } else {
-            $userProfile = [
-                'goal' => $user->goal?->name ?? 'Manger équilibré',
-                'diet' => $user->dietType?->name ?? 'Standard',
-                'allergies' => $user->allergies()->pluck('name')->implode(', ') ?: 'Aucune',
-                'activityLevel' => $user->activityLevel?->name ?? 'Sédentaire'
-            ];
-        }
-
-        $currentPlanning = $request->input('current_planning', []);
-
-        // Fetch real recipes from Spoonacular to give to Gemini
-        $diet = $userProfile['diet'] !== 'Standard' ? $userProfile['diet'] : '';
-        $allergies = $userProfile['allergies'] !== 'Aucune' ? $userProfile['allergies'] : '';
-        
-        $params = [
-            'apiKey' => env('SPOONACULAR_API_KEY'),
-            'number' => 20, // Fetch enough recipes for a week
-            'addRecipeNutrition' => 'true',
-            'type' => 'main course,breakfast,snack',
-        ];
-        if ($diet) $params['diet'] = $diet;
-        if ($allergies) $params['intolerances'] = $allergies;
-
-        $response = \Illuminate\Support\Facades\Http::get('https://api.spoonacular.com/recipes/complexSearch', $params);
-        $siteRecipes = [];
-        
-        if ($response->successful()) {
-            $recipes = $response->json()['results'] ?? [];
-            foreach ($recipes as $r) {
-                $siteRecipes[] = [
-                    'id' => $r['id'],
-                    'title' => $r['title'],
-                    'image' => $r['image'] ?? '',
-                    'readyInMinutes' => $r['readyInMinutes'] ?? 30,
-                    'calories' => $r['nutrition']['nutrients'][0]['amount'] ?? 0 // Just an approximation for the AI
+        try {
+            $user = $request->user();
+            if (!$user) {
+                // Pour les tests sans auth si besoin, ou utiliser un mock
+                $userProfile = [
+                    'goal' => $request->input('goal', 'Manger équilibré'),
+                    'diet' => $request->input('diet', 'Standard'),
+                    'allergies' => $request->input('allergies', 'Aucune'),
+                    'activityLevel' => $request->input('activityLevel', 'Sédentaire')
+                ];
+            } else {
+                $userProfile = [
+                    'goal' => $user->goal?->name ?? 'Manger équilibré',
+                    'diet' => $user->dietType?->name ?? 'Standard',
+                    'allergies' => $user->allergies()->pluck('name')->implode(', ') ?: 'Aucune',
+                    'activityLevel' => $user->activityLevel?->name ?? 'Sédentaire'
                 ];
             }
+
+            $currentPlanning = $request->input('current_planning', []);
+            $cleanedPlanning = [];
+            if (is_array($currentPlanning)) {
+                foreach ($currentPlanning as $day => $meals) {
+                    if (is_array($meals)) {
+                        $hasMeals = false;
+                        $dayMeals = [];
+                        foreach (['breakfast', 'lunch', 'dinner', 'snack'] as $mealType) {
+                            $meal = $meals[$mealType] ?? null;
+                            if (!is_null($meal) && !empty($meal)) {
+                                $hasMeals = true;
+                                $dayMeals[] = $meal;
+                            } else {
+                                $dayMeals[] = null;
+                            }
+                        }
+                        if ($hasMeals) {
+                            $cleanedPlanning[$day] = ['meals' => $dayMeals];
+                        }
+                    }
+                }
+            }
+
+            // Fetch real recipes from Spoonacular to give to Gemini
+            $diet = $userProfile['diet'] !== 'Standard' ? $userProfile['diet'] : '';
+            $allergies = $userProfile['allergies'] !== 'Aucune' ? $userProfile['allergies'] : '';
+            
+            $params = [
+                'apiKey' => env('SPOONACULAR_API_KEY'),
+                'number' => 14, // Réduire à 14 pour éviter Timeout / OutOfMemory
+                'addRecipeNutrition' => 'true',
+                'type' => 'main course,breakfast,snack',
+            ];
+            if ($diet) $params['diet'] = $diet;
+            if ($allergies) $params['intolerances'] = $allergies;
+
+            $response = \Illuminate\Support\Facades\Http::get('https://api.spoonacular.com/recipes/complexSearch', $params);
+            $siteRecipes = [];
+            
+            if ($response->successful()) {
+                $recipes = $response->json()['results'] ?? [];
+                foreach ($recipes as $r) {
+                    $siteRecipes[] = [
+                        'id' => $r['id'],
+                        'title' => $r['title'],
+                        'image' => $r['image'] ?? '',
+                        'readyInMinutes' => $r['readyInMinutes'] ?? 30,
+                        'calories' => collect($r['nutrition']['nutrients'] ?? [])->firstWhere('name', 'Calories')['amount'] ?? 0 // Just an approximation for the AI
+                    ];
+                }
+            } else {
+                throw new \Exception("Erreur Spoonacular: " . $response->body());
+            }
+
+            if (empty($siteRecipes)) {
+                return response()->json([
+                    'error' => "Spoonacular n'a trouvé aucune recette pour vos préférences (Régime/Allergies). L'IA ne peut pas générer de planning."
+                ], 400);
+            }
+
+            $planning = $this->aiService->generateMealPlan($userProfile, $cleanedPlanning, $siteRecipes);
+
+            if (isset($planning['error'])) {
+                return response()->json(['error' => $planning['error']], 500);
+            }
+
+            return response()->json($planning);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
         }
-
-        $planning = $this->aiService->generateMealPlan($userProfile, $currentPlanning, $siteRecipes);
-
-        if (isset($planning['error'])) {
-            return response()->json($planning, 500);
-        }
-
-        return response()->json($planning);
     }
 
     public function sendPlanningWhatsApp(Request $request)
