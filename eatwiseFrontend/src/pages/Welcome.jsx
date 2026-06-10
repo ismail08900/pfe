@@ -46,7 +46,7 @@ export default function Welcome() {
               <div className="relative">
                 <div className="w-64 h-64 md:w-96 md:h-96 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
                 <img
-                  src="public\irina-del-uJQYVRza0VY-unsplash.jpg"
+                  src="/irina-del-uJQYVRza0VY-unsplash.jpg"
                   alt="Healthy meal"
                   className="w-full max-w-lg rounded-xl shadow-2xl relative z-10"
                 />

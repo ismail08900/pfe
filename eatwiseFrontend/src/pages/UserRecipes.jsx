@@ -607,8 +607,9 @@ export default function UserRecipes() {
         setRecipes((prev) => [...response.data.results, ...prev]);
       }
     } catch (error) {
-      console.error("Erreur de génération IA :", error);
-      alert("Erreur lors de la génération de la recette avec l'IA.");
+      console.error("Erreur génération IA :", error);
+      const backendError = error.response?.data?.error || error.response?.data?.message || error.message;
+      toast.error("Erreur : " + backendError);
     } finally {
       setLoadingAI(false);
     }

@@ -163,7 +163,7 @@ class AIController extends Controller
             if ($diet) $params['diet'] = $diet;
             if ($allergies) $params['intolerances'] = $allergies;
 
-            $response = \Illuminate\Support\Facades\Http::get('https://api.spoonacular.com/recipes/complexSearch', $params);
+            $response = \Illuminate\Support\Facades\Http::timeout(15)->get('https://api.spoonacular.com/recipes/complexSearch', $params);
             $siteRecipes = [];
             
             if ($response->successful()) {

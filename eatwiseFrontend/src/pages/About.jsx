@@ -69,7 +69,7 @@ const About = () => {
             <div className="md:w-1/2">
               <div className="rounded-xl overflow-hidden shadow-lg">
                 <img
-                  src="public\photo-1498837167922-ddd27525d352.jpg"
+                  src="/photo-1498837167922-ddd27525d352.jpg"
                   alt="Équipe EatWise"
                   className="w-full h-full object-cover"
                 />

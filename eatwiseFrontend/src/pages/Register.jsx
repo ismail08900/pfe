@@ -151,8 +151,8 @@ export default function Register() {
                 allergy_ids,
               });
               setError("");
-              localStorage.setItem("verifyToken", res.data.token);
-              navigate("/verify-email");
+              localStorage.setItem("token", res.data.token);
+              navigate("/home");
             } catch (err) {
               // Ici, ne pas essayer de lire res.data, utilise err.response.data ou un message par défaut
               setError(

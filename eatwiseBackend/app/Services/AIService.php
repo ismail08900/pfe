@@ -212,7 +212,7 @@ Ne mets rien d'autre après ce bloc JSON.";
     protected function callGemini(array $contents): string
     {
         try {
-            $response = Http::timeout(120)->post($this->baseUrl . '?key=' . $this->apiKey, [
+            $response = Http::timeout(30)->post($this->baseUrl . '?key=' . $this->apiKey, [
                 'contents' => $contents,
                 'generationConfig' => [
                     'temperature' => 0.7,

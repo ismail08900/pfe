@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
 const AddRestaurantModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -54,7 +56,7 @@ const AddRestaurantModal = ({ isOpen, onClose, onSuccess }) => {
 
     try {
       await axios.post(
-        "http://localhost:8000/api/restaurant/register",
+        `${API_BASE}/restaurant/register`,
         formData
       );
       toast.success("Restaurant ajouté avec succès !");

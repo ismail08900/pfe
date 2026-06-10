@@ -71,7 +71,7 @@ const LearnMore = () => {
             <div className="md:w-1/2">
               <div className="rounded-xl overflow-hidden shadow-lg">
                 <img
-                  src="public\brooke-lark-HlNcigvUi4Q-unsplash.jpg"
+                  src="/brooke-lark-HlNcigvUi4Q-unsplash.jpg"
                   alt="Équipe EatWise"
                   className="w-full h-full object-cover"
                 />

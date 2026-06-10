@@ -22,32 +22,41 @@ function NutritionBar({ label, value, max, unit, color }) {
   );
 }
 
-function getNutritionMap(nutrition) {
+function getNutritionMap(recipe) {
   const map = {};
-  if (!nutrition || !nutrition.nutrients) return map;
-  nutrition.nutrients.forEach((n) => {
-    const name = n.name.toLowerCase();
-    if (name.includes("calories")) map.calories = n.amount;
-    if (name === "protein") map.protein = n.amount;
-    if (name === "carbohydrates") map.carbs = n.amount;
-    if (name === "fat") map.fat = n.amount;
-    if (name === "fiber") map.fiber = n.amount;
-    if (name === "cholesterol") map.cholesterol = n.amount;
-    if (name === "sugar") map.sugar = n.amount;
-    if (name === "sodium") map.sodium = n.amount;
-    if (name === "vitamin a") map.vitaminA = n.amount;
-    if (name === "vitamin c") map.vitaminC = n.amount;
-    if (name === "vitamin d") map.vitaminD = n.amount;
-    if (name === "vitamin b12") map.vitaminB12 = n.amount;
-    if (name === "vitamin b6") map.vitaminB6 = n.amount;
-    if (name === "vitamin e") map.vitaminE = n.amount;
-    if (name === "vitamin k") map.vitaminK = n.amount;
-    if (name === "calcium") map.calcium = n.amount;
-    if (name === "iron") map.iron = n.amount;
-    if (name === "potassium") map.potassium = n.amount;
-    if (name === "magnesium") map.magnesium = n.amount;
-    if (name === "zinc") map.zinc = n.amount;
-  });
+  if (!recipe) return map;
+
+  if (recipe.nutrition && recipe.nutrition.nutrients) {
+    recipe.nutrition.nutrients.forEach((n) => {
+      const name = n.name.toLowerCase();
+      if (name.includes("calories")) map.calories = n.amount;
+      if (name === "protein") map.protein = n.amount;
+      if (name === "carbohydrates") map.carbs = n.amount;
+      if (name === "fat") map.fat = n.amount;
+      if (name === "fiber") map.fiber = n.amount;
+      if (name === "cholesterol") map.cholesterol = n.amount;
+      if (name === "sugar") map.sugar = n.amount;
+      if (name === "sodium") map.sodium = n.amount;
+      if (name === "vitamin a") map.vitaminA = n.amount;
+      if (name === "vitamin c") map.vitaminC = n.amount;
+      if (name === "vitamin d") map.vitaminD = n.amount;
+      if (name === "vitamin b12") map.vitaminB12 = n.amount;
+      if (name === "vitamin b6") map.vitaminB6 = n.amount;
+      if (name === "vitamin e") map.vitaminE = n.amount;
+      if (name === "vitamin k") map.vitaminK = n.amount;
+      if (name === "calcium") map.calcium = n.amount;
+      if (name === "iron") map.iron = n.amount;
+      if (name === "potassium") map.potassium = n.amount;
+      if (name === "magnesium") map.magnesium = n.amount;
+      if (name === "zinc") map.zinc = n.amount;
+    });
+  } else {
+    if (recipe.calories !== undefined) map.calories = recipe.calories;
+    if (recipe.protein !== undefined) map.protein = recipe.protein;
+    if (recipe.carbs !== undefined) map.carbs = recipe.carbs;
+    if (recipe.fat !== undefined) map.fat = recipe.fat;
+    if (recipe.fiber !== undefined) map.fiber = recipe.fiber;
+  }
   return map;
 }
 
@@ -97,7 +106,7 @@ export default function RecipeDetails() {
 
   if (!recipe) return null;
 
-  const nutrition = getNutritionMap(recipe.nutrition);
+  const nutrition = getNutritionMap(recipe);
   const NUTRITION_MAX = {
     calories: 800,
     protein: 40,

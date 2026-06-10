@@ -6,7 +6,7 @@ import AddRestaurantModal from "../components/AddRestaurantModal";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const API_BASE = "http://localhost:8000/api/admin";
+const API_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/admin`;
 
 const AdminDashboard = () => {
   const navigate = useNavigate();

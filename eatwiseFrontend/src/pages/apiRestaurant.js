@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Instance Axios pour l'espace restaurant
 const apiRestaurant = axios.create({
-  baseURL: "http://localhost:8000/api", // adapte si besoin
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
 });
 
 apiRestaurant.interceptors.request.use((config) => {

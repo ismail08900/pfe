@@ -2,7 +2,10 @@ import axios from "axios";
 
 // Crée une instance axios personnalisée
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", // adapte si besoin
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
+  headers: {
+    "Accept": "application/json",
+  },
 });
 
 // Ajoute un intercepteur pour inclure le token dans chaque requête

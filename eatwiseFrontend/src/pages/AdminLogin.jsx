@@ -3,6 +3,8 @@ import { Mail, Lock, ArrowLeftCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +18,7 @@ const AdminLogin = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/admin/login",
+        `${API_BASE}/admin/login`,
         {
           email,
           password,

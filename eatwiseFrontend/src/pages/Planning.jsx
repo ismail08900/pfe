@@ -211,38 +211,38 @@ export default function Planning() {
       const response = await api.post("/ai/generate-planning", {
         current_planning: planning
       });
-      if (response.data && response.data.week) {
-        // Le format de retour de l'IA doit correspondre au state planning
-        // (qui attend un objet avec les jours contenant les repas)
-        // Mais nous devons l'adapter si nécessaire
-        
-        // Supposons que l'IA renvoie { week: { lundi: { meals: [...] }, ... } }
-        // On transforme pour le format: { lundi: { breakfast: {}, lunch: {}, dinner: {}, snack: {} }, ... }
-        const newPlanning = { ...planning };
-        
-        DAYS.forEach((day) => {
-          if (!newPlanning[day]) newPlanning[day] = {};
-          const aiMeals = response.data.week[day]?.meals || [];
+      if (response.data) {
+        const weekData = response.data.week || response.data;
+        if (weekData && weekData.lundi) {
+          const newPlanning = { ...planning };
           
-          if (aiMeals.length > 0) newPlanning[day].breakfast = aiMeals[0];
-          if (aiMeals.length > 1) newPlanning[day].lunch = aiMeals[1];
-          if (aiMeals.length > 2) newPlanning[day].dinner = aiMeals[2];
-          if (aiMeals.length > 3) newPlanning[day].snack = aiMeals[3];
-        });
+          DAYS.forEach((day) => {
+            if (!newPlanning[day]) newPlanning[day] = {};
+            const aiMeals = weekData[day]?.meals || [];
+            
+            if (aiMeals.length > 0) newPlanning[day].breakfast = aiMeals[0];
+            if (aiMeals.length > 1) newPlanning[day].lunch = aiMeals[1];
+            if (aiMeals.length > 2) newPlanning[day].dinner = aiMeals[2];
+            if (aiMeals.length > 3) newPlanning[day].snack = aiMeals[3];
+          });
 
-        setPlanning(newPlanning);
-        
-        // Sauvegarde du nouveau planning en DB
-        await api.post("/planning", {
-          week_start: weekStart,
-          planning: newPlanning,
-        });
+          setPlanning(newPlanning);
+          
+          // Sauvegarde du nouveau planning en DB
+          await api.post("/planning", {
+            week_start: weekStart,
+            planning: newPlanning,
+          });
 
-        toast.success("Planning généré par l'IA avec succès !");
+          toast.success("Planning généré par l'IA avec succès !");
+        } else {
+          toast.error("Erreur de format depuis l'IA.");
+        }
       }
     } catch (error) {
       console.error("Erreur IA planning :", error);
-      toast.error("Erreur lors de la génération du planning par l'IA.");
+      const backendError = error.response?.data?.error || error.response?.data?.message || error.message;
+      toast.error("Erreur : " + backendError);
     } finally {
       setLoadingAI(false);
     }

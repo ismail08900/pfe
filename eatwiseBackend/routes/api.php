@@ -38,6 +38,22 @@ Route::get("/tables-info", function () {
     }
 });
 
+Route::get('/init-db', function () {
+    try {
+        echo "Running migrations...<br>";
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        echo str_replace("\n", "<br>", \Illuminate\Support\Facades\Artisan::output()) . "<br>";
+
+        echo "Running seeders...<br>";
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        echo str_replace("\n", "<br>", \Illuminate\Support\Facades\Artisan::output()) . "<br>";
+
+        return "Database initialized successfully!";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
+});
+
 
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
@@ -110,10 +126,8 @@ Route::middleware('auth:sanctum', EnsureEmailIsVerified::class)->group(function 
     Route::post('/planning/send-whatsapp', [App\Http\Controllers\AIController::class, 'sendPlanningWhatsApp']);
 });
 
-
-
-
-
+Route::get('/ai-test', [App\Http\Controllers\AIController::class, 'testGemini']);
+Route::get('/ai-planning-test', [App\Http\Controllers\AIController::class, 'testGeminiPlanning']);
 
 // Pour que le front puisse charger les options :
 Route::get('/allergies', fn() => Allergy::all());
@@ -152,7 +166,7 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash) {
         event(new Verified($user));
     }
 
-    return Redirect::to('http://localhost:5173/email-verified');
+    return Redirect::to('https://pfe-frontend-neon.vercel.app/email-verified');
 })->middleware(['signed'])->name('verification.verify');
 
 Route::get('/dishes-public', function () {
