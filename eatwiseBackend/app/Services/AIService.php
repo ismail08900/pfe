@@ -211,11 +211,10 @@ Ne mets rien d'autre après ce bloc JSON.";
 
     protected function callGemini(array $contents): string
     {
-        // Try each model once with a short timeout to stay within Railway's 60s gateway limit
-        // Budget: ~20s per model attempt, max 2 models = 40s for Gemini
+        // gemini-3.5-flash is the only model available with this API key
+        // (2.0 models have exhausted free tier, 1.5 is deprecated)
         $models = [
-            'gemini-2.0-flash',
-            'gemini-2.0-flash-lite',
+            'gemini-3.5-flash',
         ];
 
         foreach ($models as $model) {
